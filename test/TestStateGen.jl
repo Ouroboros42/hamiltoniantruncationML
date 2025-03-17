@@ -2,7 +2,7 @@ using MLTruncate.Hamiltonian
 using Base.Iterators
 
 @testset "Known Properties" begin
-    size = 0.01
+    size = 0.1
     max_e = 4
     k = 0
     coupling = 1
@@ -28,7 +28,7 @@ trivial_sub_hamiltonians(space, subspaces, is_sparse::Bool=true) = trivial_sub_m
 end
 
 @testset "Energy Ordering" begin
-    size = 0.01
+    size = 0.1
 
     space = FockSpaceImpl(size)
 

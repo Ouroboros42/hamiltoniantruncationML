@@ -12,6 +12,7 @@ function sub_matrices(gen_matrix, (substates..., allstates)::NTuple{N, Vector}) 
     largest_matrix = gen_matrix(allstates)
 
     smaller_matrices = map(substates) do states
+
         outer_indices = indices_of(states, allstates)
         if any(isnothing, outer_indices)
             throw("Substates not properly nested")

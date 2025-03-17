@@ -2,16 +2,18 @@ module MLTruncate
 
 module Hamiltonian
 
-include("Hamiltonian/UIntUtil.jl")
-include("Hamiltonian/Parity.jl")
-include("Hamiltonian/IntPartitions.jl")
-include("Hamiltonian/FockStates.jl")
-include("Hamiltonian/FockSpace.jl")
-include("Hamiltonian/StateGen.jl")
-include("Hamiltonian/Ladders.jl")
-include("Hamiltonian/Interaction.jl")
-include("Hamiltonian/Diagonalisation.jl")
-include("Hamiltonian/Stratified.jl")
+include("Hamiltonian/Util/Conversions.jl")
+include("Hamiltonian/Util/Parity.jl")
+include("Hamiltonian/Util/IntPartitions.jl")
+include("Hamiltonian/FockSpace/States.jl")
+include("Hamiltonian/FockSpace/Symmetrised.jl")
+include("Hamiltonian/FockSpace/FockSpace.jl")
+include("Hamiltonian/FockSpace/BuildMatrix.jl")
+include("Hamiltonian/FockSpace/StateGen.jl")
+include("Hamiltonian/FockSpace/Diagonalisation.jl")
+include("Hamiltonian/FockSpace/Stratified.jl")
+include("Hamiltonian/Interaction/Ladders.jl")
+include("Hamiltonian/Interaction/Phi4.jl")
 
 end
 

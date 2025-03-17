@@ -5,6 +5,10 @@ using Test
         include("./TestPartitions.jl")
     end
 
+    @testset "State implementation tests" begin
+        include("./TestStates.jl")
+    end
+
     @testset "State generation tests" begin
         include("./TestStateGen.jl")
     end

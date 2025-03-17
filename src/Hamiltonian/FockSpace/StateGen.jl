@@ -48,7 +48,7 @@ function states_with_stationary(remaining_energy::AbstractFloat, pos_momenta::Ve
 end
 
 function make_state(pos_momenta::Vector{K}, neg_momenta::Vector{K}, n_stationary::N) where {K <: Unsigned, N <: Unsigned}
-    counts = Dict{signed(K), N}(0 => n_stationary)
+    counts = DictFockState(Dict(zero(signed(K)) => n_stationary))
 
     for k in pos_momenta
         add_particle!(counts, signed(k))

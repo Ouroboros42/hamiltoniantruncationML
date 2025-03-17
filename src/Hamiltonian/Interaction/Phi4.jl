@@ -12,12 +12,12 @@ struct Phi4Impl{E <: AbstractFloat} <: Phi4Space{E}
     coupling::E
 end
 
-Phi4Impl(k_unit::Real, coupling::Real) = Phi4Impl(promote(k_unit, coupling)...)
+Phi4Impl(k_unit::Real, coupling::Real) = Phi4Impl(promoteto(float, k_unit, coupling)...)
 
 k_unit(space::Phi4Impl) = space.k_unit
 coupling(space::Phi4Impl) = space.coupling
 
-function diagonal_hamiltonian_element(space:: Phi4Space{E}, state::FockState{K, N})::E where {E <: AbstractFloat, K <: Signed, N <: Unsigned}
+function diagonal_hamiltonian_element(space:: Phi4Space{E}, state::FockState{K, N})::E where {E, K <: Signed, N <: Unsigned}
     total = free_energy(space, state)
 
     counts_over_1 = K[]
@@ -39,7 +39,7 @@ function diagonal_hamiltonian_element(space:: Phi4Space{E}, state::FockState{K, 
     return total
 end
 
-function hamiltonian_element(space::Phi4Space{E}, in_state::FockState, out_state::FockState)::E where {E <: AbstractFloat}
+function hamiltonian_element(space::Phi4Space{E}, in_state::FockState, out_state::FockState)::E where {E}
     ladders = min_ladders(in_state, out_state) 
 
     if momentum(ladders) != 0; return 0 end
