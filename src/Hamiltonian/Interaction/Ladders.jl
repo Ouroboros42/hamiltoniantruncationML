@@ -1,14 +1,16 @@
 export LadderOperators, min_ladders, with_number_ops, order 
 
 using Combinatorics
-import Base: +
+import Base: +, zero
 
 struct MonoLadder{N <: Unsigned}
     raising::N
     lowering::N
 end
 
-MonoLadder(n::Unsigned) = MonoLadder(n, n)
+MonoLadder(n) = MonoLadder(n, n)
+
+zero(::Type{MonoLadder{N}}) where N = MonoLadder(zero(N))
 
 function diff_ladder(n_in::N, n_out::N) where {N <: Unsigned}
     n_out > n_in ? MonoLadder(n_out - n_in, zero(N)) : MonoLadder(zero(N), n_in - n_out)
@@ -20,11 +22,11 @@ order(ladder::MonoLadder) = ladder.raising + ladder.lowering
 
 occupation_change(ladder::MonoLadder) = signed(ladder.raising) - signed(ladder.lowering)
 
-function scale_factor(space::BoundedFockSpace{E}, momentum::Signed, ladder::MonoLadder)::E where {E <: AbstractFloat}
+function scale_factor(space::BoundedFockSpace{E}, momentum::Signed, ladder::MonoLadder)::E where E
     sqrt(free_energy(space, momentum) ^ order(ladder))
 end
 
-function field_matrix_element(space::BoundedFockSpace{E}, n_in::N, n_out::N, (;raising, lowering)::MonoLadder{N})::E where {E <: AbstractFloat, N <: Unsigned}
+function field_matrix_element(::BoundedFockSpace{E}, n_in::N, n_out::N, (;raising, lowering)::MonoLadder{N})::E where {E, N <: Unsigned}
     if n_in < lowering || n_out < raising; return 0 end
 
     n_intermediate = n_in - lowering
@@ -44,19 +46,19 @@ number_operators(operator_powers::Pair...) = LadderOperators(k => MonoLadder(n) 
 
 +(operators::LadderOperators...) = mergewith(+, operators...)
 
-function min_ladders(in_state::FockState{K, N}, out_state::FockState{K, N}) where {K <: Signed, N <: Unsigned}
+function min_ladders(in_state::FockState{K, N}, out_state::FockState{K, N}) where {K, N}
     LadderOperators{K, N}(k => diff_ladder(ns...) for (k, ns) in iter_all(in_state, out_state))
 end
 
-function order(ladder::LadderOperators{K, N}) where {K <: Signed, N <: Unsigned}
+function order(ladder::LadderOperators{K, N}) where {K, N}
     sum(order(mono) for (_, mono) in ladder; init=zero(N))
 end
 
-function momentum(ladder::LadderOperators{K, N}) where {K <: Signed, N <: Unsigned}
+function momentum(ladder::LadderOperators{K, N}) where {K, N}
     sum(k * occupation_change(mono) for (k, mono) in pairs(ladder); init=zero(K))
 end
 
-function field_matrix_element(space::BoundedFockSpace{E}, in_state::FockState, out_state::FockState, ladders::LadderOperators)::E where {E <: AbstractFloat}
+function field_matrix_element(space::BoundedFockSpace{E}, in_state::FockState, out_state::FockState, ladders::LadderOperators)::E where E
     product = coupling(space)
 
     for (k, ladder) in ladders
