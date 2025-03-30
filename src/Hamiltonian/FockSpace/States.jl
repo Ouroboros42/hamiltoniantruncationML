@@ -1,6 +1,6 @@
-export FockState, n_particles, n_parity, momentum, iter_all, DictFockState, relevant_momenta, occupation_number, x_flipped, x_parity
+export FockState, n_particles, n_parity, momentum, iter_all, DictFockState, relevant_momenta, occupation_number, x_flipped, x_parity, frozen
 
-import Base: ==, pairs, iterate, length
+import Base: ==, pairs, iterate, length, ImmutableDict
 
 using MLStyle
 
@@ -23,13 +23,11 @@ struct DictFockState{K <: Signed, N <: Unsigned, D <: AbstractDict{K, N}} <: Foc
     occupation_numbers::D
 end
 
-# function DictFockState(occupation_numbers::D) where {K <: Signed, N <: Unsigned, D <: AbstractDict{K, N}}
-#     DictFockState{K, N, D}(occupation_numbers)
-# end
-
 function DictFockState(occupation_numbers::Pair{K, N}...) where {K, N}
     DictFockState(Dict(signed(k) => force_unsigned(n) for (k, n) in occupation_numbers))
 end
+
+frozen(state::DictFockState) = DictFockState(ImmutableDict(state.occupation_numbers...))
 
 pairs(state::DictFockState) = pairs(state.occupation_numbers)
 iterate(state::DictFockState) = iterate(pairs(state))
