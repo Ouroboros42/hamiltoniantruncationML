@@ -16,7 +16,7 @@ energies = (3.1, 3.5, 3.9)
 space = Phi4Impl(size, coupling)
 
 for k in (-1, 0, 2)
-    for symmetrisation in Set(Parity)
+    for symmetrisation in Set(MaybeParity)
         sym_label = isnothing(symmetrisation) ? "X-all" : "X-$symmetrisation"
         param_label = "K=$k, $sym_label"
 
@@ -26,10 +26,12 @@ for k in (-1, 0, 2)
         max_e = energies[end]
 
         @testset "State Properties $param_label" begin
-            for state in all_states
-                @test state.base_state isa (FockState{K, N} where {K <: Signed, N <: Unsigned})
-
-                @test momentum(state.base_state) == k
+            for state in all_states                
+                if isnothing(symmetrisation)
+                    @test momentum(state) == k
+                else
+                    @test momentum(state.base_state) == k
+                end
 
                 @test free_energy(space, state) <= max_e
             end
