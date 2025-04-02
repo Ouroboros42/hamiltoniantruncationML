@@ -2,13 +2,17 @@ export sub_spaces, sub_hamiltonians
 
 function sub_spaces(space::BoundedFockSpace, energies...; kwargs...)
     map(energies) do energy
-        collect(generate_states(space, energy; kwargs...))
+        states = collect(generate_states(space, energy; kwargs...))
+        if isempty(states)
+            throw("Empty subspace created at energy $energy")
+        end
+        states
     end
 end
 
 indices_of(items, sequence) = findfirst.(.==(items), Ref(sequence))
 
-function sub_matrices(gen_matrix, (substates..., allstates)::NTuple{N, Vector}) where {N}
+function sub_matrices(gen_matrix, (substates..., allstates)::NTuple{N, Vector}) where N
     largest_matrix = gen_matrix(allstates)
 
     smaller_matrices = map(substates) do states

@@ -28,7 +28,7 @@ trivial_sub_hamiltonians(space, subspaces, is_sparse::Bool=true) = trivial_sub_m
 end
 
 @testset "Energy Ordering" begin
-    size = 0.1
+    size = 0.01
 
     space = FockSpaceImpl(size)
 

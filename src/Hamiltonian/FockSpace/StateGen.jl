@@ -1,42 +1,57 @@
 export generate_states
 
-function generate_states(space::BoundedFockSpace{E}, max_energy::Real; x_symmetrisation::MaybeParity = nothing, kwargs...) where { E <: AbstractFloat }
-    symmetrise_states(generate_fockstates(space, convert(E, max_energy); kwargs...), x_symmetrisation)
-end
-
-function generate_fockstates(space::BoundedFockSpace{E}, max_energy::E; momentum::K = 0, n_parity::MaybeParity = nothing) where {E <: AbstractFloat, K <: Signed}
+generate_states(space::BoundedFockSpace{E}, max_energy; kwargs...) where E = generate_states(space, convert(E, max_energy); kwargs...) 
+function generate_states(space::BoundedFockSpace{E}, max_energy::E; momentum::K = 0, n_parity::MaybeParity = nothing, x_symmetrisation::MaybeParity = nothing) where {E, K <: Signed}
     abs_k = abs(momentum)
     max_k = max_momentum(space, max_energy)
 
     (net_pos_k, net_neg_k) = momentum >= 0 ? (abs_k, 0) : (0, abs_k)
     max_k_int = max_k - abs_k
 
-    flatmap_until_empty(0:max_k_int+1) do k_internal
-        gross_momentum_states(space, max_energy, unsigned(k_internal + net_pos_k), unsigned(k_internal + net_neg_k), n_parity)
+    states = flatmap(0:max_k_int+1) do k_internal
+        gross_momentum_states(space, max_energy, unsigned(k_internal + net_pos_k), unsigned(k_internal + net_neg_k), n_parity, x_symmetrisation)
     end
+    
+    # Zeros have already been filtered
+    symmetrise_states(states, x_symmetrisation, false)
 end
 
-flatmap_until_empty(f, iter) = flatten(takewhile(!isempty, Iterators.map(f, iter)))
-
-function max_momentum(space::BoundedFockSpace{E}, max_energy::E) where {E <: AbstractFloat}
+function max_momentum(space::BoundedFockSpace{E}, max_energy::E) where E
     floor(Integer, sqrt((max_energy^2 - 1)) / k_unit(space))
 end
 
-function gross_momentum_states(space::BoundedFockSpace, max_energy::AbstractFloat, pos_momentum::K, neg_momentum::K, n_parity::MaybeParity) where {K <: Unsigned}
-    flatmap(momentum_splits(space, max_energy, pos_momentum)) do (energy_minus_pos, pos_momenta)
-        flatmap(momentum_splits(space, energy_minus_pos, neg_momentum)) do (energy_minus_neg, neg_momenta)
+function gross_momentum_states(space::BoundedFockSpace, max_energy::AbstractFloat, pos_momentum::K, neg_momentum::K, n_parity::MaybeParity, x_symmetrisation::MaybeParity) where {K <: Unsigned}
+    pos_momentum_splits = split_momentum(space, max_energy, pos_momentum)
+
+    flatmap(pos_momentum_splits) do (energy_minus_pos, pos_momenta)
+        neg_momentum_splits = cutoff_split_momenta(split_momentum(space, energy_minus_pos, neg_momentum), pos_momenta, x_symmetrisation)
+
+        flatmap(neg_momentum_splits) do (energy_minus_neg, neg_momenta)
             states_with_stationary(energy_minus_neg, pos_momenta, neg_momenta, n_parity)
         end
     end
 end
 
-function momentum_splits(space::BoundedFockSpace, max_energy::AbstractFloat, gross_momentum::K) where {K <: Unsigned}
+cutoff_split_momenta(momentum_splits, lexicographic_bound::Vector{K}, x_symmetrisation::Nothing) where {K <: Unsigned} = momentum_splits
+
+function cutoff_split_momenta(momentum_splits, lexicographic_max::Vector{K}, x_symmetrisation::Parity) where {K <: Unsigned}
+    bound_func = @match x_symmetrisation begin
+        &Even => <=
+        &Odd => <
+    end
+
+    Iterators.filter(momentum_splits) do (_, momenta)
+        bound_func(momenta, lexicographic_max)
+    end 
+end
+
+function split_momentum(space::BoundedFockSpace, max_energy::AbstractFloat, gross_momentum::K) where {K <: Unsigned}
     energies_and_momenta = (
         (max_energy - free_energy(space, pos_momenta), pos_momenta) for pos_momenta in PartitionBuilder(gross_momentum) 
     )
     
     takewhile(energies_and_momenta) do (remaining_energy, _)
-        remaining_energy > 0 
+        remaining_energy > 0
     end
 end
 

@@ -1,12 +1,12 @@
 export hamiltonian, dense_hamiltonian, sparse_hamiltonian, hamiltonian_element, diagonal_hamiltonian_element
 
-function diagonal_hamiltonian_element(space::BoundedFockSpace{E}, state::FockState)::E where {E}
+function diagonal_hamiltonian_element(space::BoundedFockSpace{E}, state::FockState)::E where E
     free_energy(space, state)
 end
 
 diagonal_hamiltonian_element(space::BoundedFockSpace) = state -> diagonal_hamiltonian_element(space, state)
  
-function hamiltonian_element(space::BoundedFockSpace{E}, in_state::FockState, out_state::FockState)::E where {E}
+function hamiltonian_element(space::BoundedFockSpace{E}, in_state::FockState, out_state::FockState)::E where E
     if in_state == out_state
         diagonal_hamiltonian_element(space, in_state)
     else
@@ -16,11 +16,11 @@ end
 
 hamiltonian_element(space::BoundedFockSpace) = (in, out) -> hamiltonian_element(space, in, out) 
 
-function hamiltonian_element(space::BoundedFockSpace{E}, in_state::FieldState, out_state::FieldState)::E where {E}
+function hamiltonian_element(space::BoundedFockSpace{E}, in_state::FieldState, out_state::FieldState)::E where E
     matrix_element(hamiltonian_element(space), in_state, out_state)
 end
 
-function diagonal_hamiltonian_element(space::BoundedFockSpace{E}, state::FieldState)::E where {E}
+function diagonal_hamiltonian_element(space::BoundedFockSpace{E}, state::FieldState)::E where E
     diagonal_matrix_element(diagonal_hamiltonian_element(space), hamiltonian_element(space), state)
 end
 

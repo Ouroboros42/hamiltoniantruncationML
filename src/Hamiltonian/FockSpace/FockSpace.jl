@@ -13,18 +13,18 @@ FockSpaceImpl(k_unit::Real) = FockSpaceImpl(float(k_unit))
 
 k_unit(space::FockSpaceImpl) = space.k_unit
 
-function free_energy(space::BoundedFockSpace{E}, momentum::Integer)::E where {E}
+function free_energy(space::BoundedFockSpace{E}, momentum::Integer)::E where E
     sqrt(1 + (k_unit(space) * momentum)^2)
 end
 
-function free_energy(space::BoundedFockSpace{E}, state::FockState)::E where {E}
+function free_energy(space::BoundedFockSpace{E}, state::FockState)::E where E
     sum((n * free_energy(space, k) for (k, n) in state); init = zero(E))
 end
 
-function free_energy(space::BoundedFockSpace{E}, state::WrappedFockState)::E where {E}
+function free_energy(space::BoundedFockSpace{E}, state::SymmetrisedFockState)::E where E
     free_energy(space, state.base_state)
 end
 
-function free_energy(space::BoundedFockSpace{E}, momenta)::E where {E}
+function free_energy(space::BoundedFockSpace{E}, momenta)::E where E
     sum((free_energy(space, k) for k in momenta); init = zero(E))
 end
