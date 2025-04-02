@@ -11,8 +11,8 @@ abstract type FockState{K <: Signed, N <: Unsigned} <: FieldState end
 n_particles(state::FockState{K, N}) where {K, N} = sum(n for (k, n) in state; init=zero(N))
 n_parity(state::FockState) = number_parity(n_particles(state))
 
-function momentum(state::FockState{K}) where {K}
-    sum(K(n) * k for (n, k) in state; init=zero(K))
+function momentum(state::FockState{K}) where K
+    sum(K(n) * k for (k, n) in state; init=zero(K))
 end
 
 iter_all(states::FockState...) = ((k, map(state -> occupation_number(state, k), states)) for k in union(map(relevant_momenta, states)...))
