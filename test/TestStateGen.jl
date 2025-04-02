@@ -1,5 +1,6 @@
 using MLTruncate.Hamiltonian
-using Base.Iterators
+
+using Base.Iterators, LinearAlgebra
 
 @testset "Known Properties" begin
     size = 0.1
@@ -28,13 +29,13 @@ trivial_sub_hamiltonians(space, subspaces, is_sparse::Bool=true) = trivial_sub_m
 end
 
 @testset "Energy Ordering" begin
-    size = 0.01
+    size = 0.1
 
     space = FockSpaceImpl(size)
 
     energies = (3.1, 3.5, 3.9)
 
-    for symmetrisation in (Odd,)
+    for symmetrisation in (Odd, Even)
         subspaces, subhamiltonians = zip(sub_hamiltonians(space, energies...; x_symmetrisation = symmetrisation)...)
 
         expected_subhamiltonians = trivial_sub_hamiltonians(space, subspaces)
@@ -46,5 +47,11 @@ end
                 @test (free_energy(space, state) > E_min) ⊻ (state in prev_states)
             end
         end
+
+        all_states = subspaces[end]
+
+        equality_matrix = all_states .== permutedims(all_states)
+
+        @test equality_matrix == I
     end
 end
