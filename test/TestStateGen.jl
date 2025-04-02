@@ -2,56 +2,59 @@ using MLTruncate.Hamiltonian
 
 using Base.Iterators, LinearAlgebra
 
-@testset "Known Properties" begin
-    size = 0.1
-    max_e = 4
-    k = 0
-    coupling = 1
-
-    space = Phi4Impl(size, coupling)
-    states = collect(generate_states(space, max_e))
-
-    for state in states
-        @test momentum(state) == k
-
-        @test free_energy(space, state) <= max_e
-    end
-    
-    H = sparse_hamiltonian(space, states)
-
-    @test all(isapprox.(H, H'))
-end
-
 trivial_sub_matrices(gen_matrix, spaces) = map(gen_matrix, spaces)
 
 trivial_sub_hamiltonians(space, subspaces, is_sparse::Bool=true) = trivial_sub_matrices(subspaces) do subspace
     hamiltonian(space, subspace, is_sparse)
 end
 
-@testset "Energy Ordering" begin
-    size = 0.1
+size = 0.1
+coupling = 1
+k = 0
+energies = (3.1, 3.5, 3.9)
 
-    space = FockSpaceImpl(size)
+space = Phi4Impl(size, coupling)
 
-    energies = (3.1, 3.5, 3.9)
+for k in (-1, 0, 2)
+    for symmetrisation in Set(Parity)
+        sym_label = isnothing(symmetrisation) ? "X-all" : "X-$symmetrisation"
+        param_label = "K=$k, $sym_label"
 
-    for symmetrisation in (Odd, Even)
-        subspaces, subhamiltonians = zip(sub_hamiltonians(space, energies...; x_symmetrisation = symmetrisation)...)
+        subspaces, subhamiltonians = zip(sub_hamiltonians(space, energies...; x_symmetrisation = symmetrisation, momentum = k)...)
+        all_states = subspaces[end]
+        H = subhamiltonians[end]
+        max_e = energies[end]
 
-        expected_subhamiltonians = trivial_sub_hamiltonians(space, subspaces)
+        @testset "State Properties $param_label" begin
+            for state in all_states
+                @test state.base_state isa (FockState{K, N} where {K <: Signed, N <: Unsigned})
 
-        @test subhamiltonians == expected_subhamiltonians
+                @test momentum(state.base_state) == k
 
-        for (E_min, prev_states, states) in zip(energies, subspaces, drop(subspaces, 1))
-            for state in states
-                @test (free_energy(space, state) > E_min) ⊻ (state in prev_states)
+                @test free_energy(space, state) <= max_e
             end
         end
 
-        all_states = subspaces[end]
+        @testset "Hamiltonian Hermitian $param_label" begin
+            @test all(isapprox.(H, H'))
+        end
 
-        equality_matrix = all_states .== permutedims(all_states)
+        @testset "Energy Ordering $param_label" begin
+            expected_subhamiltonians = trivial_sub_hamiltonians(space, subspaces)
 
-        @test equality_matrix == I
+            @test subhamiltonians == expected_subhamiltonians
+
+            for (E_min, prev_states, states) in zip(energies, subspaces, drop(subspaces, 1))
+                for state in states
+                    @test (free_energy(space, state) > E_min) ⊻ (state in prev_states)
+                end
+            end
+        end
+
+        @testset "Degeneracy Test $param_label" begin
+            equality_matrix = all_states .== permutedims(all_states)
+
+            @test equality_matrix == I
+        end
     end
 end
