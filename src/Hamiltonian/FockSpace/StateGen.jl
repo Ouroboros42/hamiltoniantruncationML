@@ -26,7 +26,7 @@ function gross_momentum_states(space::BoundedFockSpace, max_energy::AbstractFloa
     pos_momentum_splits = split_momentum(space, max_energy, pos_momentum)
 
     flatmap(pos_momentum_splits) do (energy_minus_pos, pos_momenta)
-        neg_momentum_splits = cutoff_split_momenta(split_momentum(space, energy_minus_pos, neg_momentum), pos_momenta, x_symmetrisation)
+        neg_momentum_splits = cutoff_split_momenta(split_momentum(space, energy_minus_pos, neg_momentum), pos_momentum == neg_momentum, pos_momenta, x_symmetrisation)
 
         flatmap(neg_momentum_splits) do (energy_minus_neg, neg_momenta)
             states_with_stationary(energy_minus_neg, pos_momenta, neg_momenta, n_parity)
@@ -34,16 +34,16 @@ function gross_momentum_states(space::BoundedFockSpace, max_energy::AbstractFloa
     end
 end
 
-cutoff_split_momenta(momentum_splits, lexicographic_bound::Vector{K}, x_symmetrisation::Nothing) where {K <: Unsigned} = momentum_splits
+cutoff_split_momenta(momentum_splits, filter_needed::Bool, lexicographic_bound::Vector{K}, x_symmetrisation::Nothing) where {K <: Unsigned} = momentum_splits
 
-function cutoff_split_momenta(momentum_splits, lexicographic_max::Vector{K}, x_symmetrisation::Parity) where {K <: Unsigned}
+function cutoff_split_momenta(momentum_splits, filter_needed::Bool, lexicographic_max::Vector{K}, x_symmetrisation::Parity) where {K <: Unsigned}
     bound_func = @match x_symmetrisation begin
         &Even => <=
         &Odd => <
     end
 
     Iterators.filter(momentum_splits) do (; momenta)
-        bound_func(momenta, lexicographic_max)
+        !filter_needed || bound_func(momenta, lexicographic_max)
     end 
 end
 
