@@ -12,7 +12,7 @@ struct Phi4Impl{E <: AbstractFloat} <: Phi4Space{E}
     coupling::E
 end
 
-Phi4Impl(k_unit::Real, coupling::Real) = Phi4Impl(promoteto(float, k_unit, coupling)...)
+Phi4Impl(k_unit::R, coupling::Real = zero(R)) where {R <: Real} = Phi4Impl(promoteto(float, k_unit, coupling)...)
 
 k_unit(space::Phi4Impl) = space.k_unit
 coupling(space::Phi4Impl) = space.coupling
