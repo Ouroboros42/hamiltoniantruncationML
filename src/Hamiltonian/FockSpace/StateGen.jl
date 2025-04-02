@@ -2,6 +2,8 @@ export generate_states
 
 using .IntPartitions
 
+import Base: isvalid
+
 generate_states(space::BoundedFockSpace{E}, max_energy; kwargs...) where E = generate_states(space, convert(E, max_energy); kwargs...) 
 function generate_states(space::BoundedFockSpace{E}, max_energy::E; momentum::K = 0, n_parity::MaybeParity = nothing, x_symmetrisation::MaybeParity = nothing) where {E, K <: Signed}
     abs_k = abs(momentum)
@@ -25,18 +27,31 @@ end
 function gross_momentum_states(space::BoundedFockSpace, max_energy::AbstractFloat, pos_momentum::K, neg_momentum::K, n_parity::MaybeParity, x_symmetrisation::MaybeParity) where {K <: Unsigned}
     pos_momentum_splits = split_momentum(space, max_energy, pos_momentum)
 
-    flatmap(pos_momentum_splits) do (energy_minus_pos, pos_momenta)
-        neg_momentum_splits = cutoff_split_momenta(split_momentum(space, energy_minus_pos, neg_momentum), pos_momentum == neg_momentum, pos_momenta, x_symmetrisation)
+    flatmap(pos_momentum_splits) do pos_split
+        neg_momentum_splits = split_momentum(space, pos_split.remaining_energy, neg_momentum)
 
-        flatmap(neg_momentum_splits) do (energy_minus_neg, neg_momenta)
-            states_with_stationary(energy_minus_neg, pos_momenta, neg_momenta, n_parity)
+        filtered_neg_momentum_splits = nondegen_splits(neg_momentum_splits, pos_momentum == neg_momentum, pos_split.momenta, x_symmetrisation)
+
+        flatmap(filtered_neg_momentum_splits) do neg_split
+            states_with_stationary(neg_split.remaining_energy, pos_split.momenta, neg_split.momenta, n_parity)
         end
     end
 end
 
-cutoff_split_momenta(momentum_splits, filter_needed::Bool, lexicographic_bound::Vector{K}, x_symmetrisation::Nothing) where {K <: Unsigned} = momentum_splits
+struct MomentumSplit{K <: Unsigned, E}
+    remaining_energy::E
+    momenta::Vector{K}
+end
+MomentumSplit(space::BoundedFockSpace, available_energy::E, momenta::Vector{K}) where {K, E} = MomentumSplit{K, E}(available_energy - free_energy(space, momenta), momenta)
 
-function cutoff_split_momenta(momentum_splits, filter_needed::Bool, lexicographic_max::Vector{K}, x_symmetrisation::Parity) where {K <: Unsigned}
+isvalid(split::MomentumSplit) = split.remaining_energy > 0
+
+function split_momentum(space::BoundedFockSpace, max_energy::AbstractFloat, gross_momentum::K) where {K <: Unsigned}
+    takewhile(isvalid, (MomentumSplit(space, max_energy, momenta) for momenta in energy_ordered_partitions(gross_momentum)))
+end
+
+nondegen_splits(momentum_splits, filter_needed::Bool, lexicographic_bound::Vector{K}, x_symmetrisation::Nothing) where {K <: Unsigned} = momentum_splits
+function nondegen_splits(momentum_splits, filter_needed::Bool, lexicographic_max::Vector{K}, x_symmetrisation::Parity) where {K <: Unsigned}
     bound_func = @match x_symmetrisation begin
         &Even => <=
         &Odd => <
@@ -45,16 +60,6 @@ function cutoff_split_momenta(momentum_splits, filter_needed::Bool, lexicographi
     Iterators.filter(momentum_splits) do (; momenta)
         !filter_needed || bound_func(momenta, lexicographic_max)
     end 
-end
-
-function split_momentum(space::BoundedFockSpace, max_energy::AbstractFloat, gross_momentum::K) where {K <: Unsigned}
-    energies_and_momenta = Iterators.map(energy_ordered_partitions(gross_momentum)) do momenta
-        (; remaining_energy = max_energy - free_energy(space, momenta), momenta)
-    end
-
-    takewhile(energies_and_momenta) do (; remaining_energy)
-        remaining_energy > 0
-    end
 end
 
 function states_with_stationary(remaining_energy::AbstractFloat, pos_momenta::Vector{K}, neg_momenta::Vector{K}, n_parity::MaybeParity) where {K <: Unsigned}
