@@ -1,20 +1,20 @@
 import Base: iszero
 
-struct SymmetrisedFockState{F, Sym} <: FieldState
+struct SymmetrisedFockState{Sym, F} <: FieldState
     base_state::F
     flipped_state::F
     is_x_symmetric::Bool
 
     function SymmetrisedFockState{Sym}(state::F) where {F, Sym}
         flipped = x_flipped(state)
-        new{F, Sym}(state, flipped, state == flipped)
+        new{Sym, F}(state, flipped, state == flipped)
     end
 end
 
-const SymmetricState{F} = SymmetrisedFockState{F, Even}
-const AntisymmetricState{F} = SymmetrisedFockState{F, Odd}
+const SymmetricState{F} = SymmetrisedFockState{Even, F}
+const AntisymmetricState{F} = SymmetrisedFockState{Odd, F}
 
-==(state1::S, state2::S) where { S <: SymmetrisedFockState } = state1.base_state == state2.base_state
+==(state1::S, state2::S) where { S <: SymmetrisedFockState } = state1.base_state == state2.base_state || state1.base_state == state2.flipped_state 
 
 iszero(::FieldState) = false
 iszero(state::AntisymmetricState) = state.is_x_symmetric
