@@ -1,5 +1,7 @@
 export generate_states
 
+using .IntPartitions
+
 generate_states(space::BoundedFockSpace{E}, max_energy; kwargs...) where E = generate_states(space, convert(E, max_energy); kwargs...) 
 function generate_states(space::BoundedFockSpace{E}, max_energy::E; momentum::K = 0, n_parity::MaybeParity = nothing, x_symmetrisation::MaybeParity = nothing) where {E, K <: Signed}
     abs_k = abs(momentum)
@@ -40,17 +42,17 @@ function cutoff_split_momenta(momentum_splits, lexicographic_max::Vector{K}, x_s
         &Odd => <
     end
 
-    Iterators.filter(momentum_splits) do (_, momenta)
+    Iterators.filter(momentum_splits) do (; momenta)
         bound_func(momenta, lexicographic_max)
     end 
 end
 
 function split_momentum(space::BoundedFockSpace, max_energy::AbstractFloat, gross_momentum::K) where {K <: Unsigned}
-    energies_and_momenta = (
-        (max_energy - free_energy(space, pos_momenta), pos_momenta) for pos_momenta in PartitionBuilder(gross_momentum) 
-    )
-    
-    takewhile(energies_and_momenta) do (remaining_energy, _)
+    energies_and_momenta = Iterators.map(energy_ordered_partitions(gross_momentum)) do momenta
+        (; remaining_energy = max_energy - free_energy(space, momenta), momenta)
+    end
+
+    takewhile(energies_and_momenta) do (; remaining_energy)
         remaining_energy > 0
     end
 end

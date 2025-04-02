@@ -1,6 +1,6 @@
 module IntPartitions
 
-export PartitionBuilder, iterate
+export energy_ordered_partitions
 
 import ..Hamiltonian: force_unsigned
 
@@ -8,7 +8,14 @@ import Base: iterate, IteratorSize, last, isempty
 
 using DataStructures
 
-mutable struct PartialPartition{N <: Unsigned}
+struct PartitionBuilder{N <: Unsigned}
+    total::N
+end
+
+"""Alternative to Combinatorics.partitions which is ordered according to decreasing relativistic energy for a set of particles with those momenta."""
+energy_ordered_partitions(total::N) where {N <: Integer} = PartitionBuilder(force_unsigned(total))
+
+struct PartialPartition{N <: Unsigned}
     sequence::Vector{N}
     remaining_total::N
 end
@@ -24,12 +31,6 @@ end
 function finish_with(partition::PartialPartition{N}, last::N) where {N <: Unsigned}
     vcat(partition.sequence, [last])
 end
-
-mutable struct PartitionBuilder{N <: Unsigned}
-    total::N
-end
-
-PartitionBuilder(total::N) where {N <: Signed} = PartitionBuilder(force_unsigned(total))
 
 const PartitionProgress{N <: Unsigned} = Deque{PartialPartition{N}}
 
