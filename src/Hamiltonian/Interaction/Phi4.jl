@@ -48,8 +48,8 @@ function hamiltonian_element(space::Phi4Space{E}, in_state::FockState, out_state
     # Cannot be > 4 for phi^4 interaction
     # Cannot be 2 by momentum conservation
     @match order(ladders) begin
-        0 => diagonal_hamiltonian_element(space, in_state)
-        4 => field_matrix_element(space, in_state, out_state, ladders)
+        &0 => diagonal_hamiltonian_element(space, in_state)
+        &4 => field_matrix_element(space, in_state, out_state, ladders)
         _ => 0
     end
 end

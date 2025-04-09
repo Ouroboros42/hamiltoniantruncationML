@@ -25,9 +25,9 @@ iszero(state::AntisymmetricState) = state.is_x_symmetric
 
 function matrix_element(fockstate_matrix, in_state::SymmetricState, out_state::SymmetricState)
     @match in_state.is_x_symmetric + out_state.is_x_symmetric begin
-        0 => fockstate_matrix(in_state.base_state, out_state.base_state) + fockstate_matrix(in_state.flipped_state, out_state.base_state)
-        1 => fockstate_matrix(in_state.base_state, out_state.base_state) / sqrt(2)
-        2 => fockstate_matrix(in_state.base_state, out_state.base_state)
+        &0 => fockstate_matrix(in_state.base_state, out_state.base_state) + fockstate_matrix(in_state.flipped_state, out_state.base_state)
+        &1 => fockstate_matrix(in_state.base_state, out_state.base_state) / sqrt(2)
+        &2 => fockstate_matrix(in_state.base_state, out_state.base_state)
     end
 end
 
