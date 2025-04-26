@@ -1,6 +1,6 @@
 using ArnoldiMethod
 
-export spectrum
+export spectrum, groundstate
 
 function spectrum(hamiltonian, n_eigs::Integer)
     decomp, history = partialschur(hamiltonian; nev=n_eigs, which=:SR)
@@ -14,3 +14,9 @@ function spectrum(hamiltonian, n_eigs::Integer)
 end
 
 spectrum(hamiltonian) = spectrum(hamiltonian, size(hamiltonian, 1))
+
+function groundstate(hamiltonian)
+    eigvecs, eigvals = spectrum(hamiltonian, 1)
+    
+    eigvecs[:, begin], eigvals[begin]
+end
