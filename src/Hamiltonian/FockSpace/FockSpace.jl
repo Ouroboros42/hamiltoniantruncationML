@@ -1,16 +1,19 @@
 export BoundedFockSpace, FockSpaceImpl, k_unit, free_energy
 
+import Base.broadcastable
+
 using Base.Iterators
 using .IntPartitions
 
 abstract type BoundedFockSpace{E <: AbstractFloat} end
+
+Base.broadcastable(space::BoundedFockSpace) = Ref(space)
 
 struct FockSpaceImpl{E <: AbstractFloat} <: BoundedFockSpace{E}
     k_unit::E
 end
 
 FockSpaceImpl(k_unit::Real) = FockSpaceImpl(float(k_unit))
-
 k_unit(space::FockSpaceImpl) = space.k_unit
 
 function free_energy(space::BoundedFockSpace{E}, momentum::Integer)::E where E
