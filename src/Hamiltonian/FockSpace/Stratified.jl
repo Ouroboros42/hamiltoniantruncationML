@@ -1,5 +1,7 @@
 export sub_spaces, sub_hamiltonians
 
+using Logging
+
 function sub_spaces(space::BoundedFockSpace, energies...; kwargs...)
     map(energies) do energy
         states = collect(generate_states(space, energy; kwargs...))
@@ -13,7 +15,11 @@ end
 indices_of(items, sequence) = findfirst.(.==(items), Ref(sequence))
 
 function sub_matrices(gen_matrix, (substates..., allstates)::NTuple{N, Vector}) where N
+    @info "Computing matrix for $(length(allstates)) states"
+
     largest_matrix = gen_matrix(allstates)
+
+    @info "Matrix computed"
 
     smaller_matrices = map(substates) do states
 
@@ -28,6 +34,8 @@ function sub_matrices(gen_matrix, (substates..., allstates)::NTuple{N, Vector}) 
 end
 
 function sub_hamiltonians(space, energies...; is_sparse::Bool=true, kwargs...)
+    @info "Generating states"
+
     substates = sub_spaces(space, energies...; kwargs...)
 
     hamiltionians = sub_matrices(substates) do states
