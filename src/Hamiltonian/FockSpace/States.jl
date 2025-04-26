@@ -1,6 +1,6 @@
 export FockState, n_particles, n_parity, momentum, iter_all, DictFockState, relevant_momenta, occupation_number, x_flipped, x_parity, frozen
 
-import Base: ==, pairs, iterate, length, ImmutableDict
+import Base: ==, pairs, iterate, length, ImmutableDict, print
 
 using MLStyle
 
@@ -15,7 +15,18 @@ function momentum(state::FockState{K}) where K
     sum(K(n) * k for (k, n) in state; init=zero(K))
 end
 
+pairs(state::FockState) = (k => occupation_number(state, k) for k in relevant_momenta(state))
 iter_all(states::FockState...) = ((k, map(state -> occupation_number(state, k), states)) for k in union(map(relevant_momenta, states)...))
+
+function print(io::IO, state::FockState) 
+    print(io, "[")
+    for (k, n) in pairs(state)
+        for i in 1:n
+            print(io, " ", k)
+        end
+    end
+    print(io, " ]")
+end
 
 ==(state1::FockState, state2::FockState) = all(n1 == n2 for (k, (n1, n2)) in iter_all(state1, state2))
 
