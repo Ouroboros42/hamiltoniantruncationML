@@ -34,6 +34,8 @@ struct DictFockState{K <: Signed, N <: Unsigned, D <: AbstractDict{K, N}} <: Foc
     occupation_numbers::D
 end
 
+DictFockState{K, N}(occupation_numbers::Pair{K, N}...) where {K <: Signed, N <: Unsigned} = DictFockState(Dict(occupation_numbers))
+
 function DictFockState(occupation_numbers::Pair{K, N}...) where {K, N}
     DictFockState(Dict(signed(k) => force_unsigned(n) for (k, n) in occupation_numbers))
 end

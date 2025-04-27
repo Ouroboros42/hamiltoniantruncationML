@@ -16,18 +16,17 @@ energies = (3.1, 3.5, 3.9)
 space = Phi4Impl(size, coupling)
 
 for k in (-1, 0, 2)
-    for symmetrisation in Set(MaybeParity)
-        sym_label = isnothing(symmetrisation) ? "X-all" : "X-$symmetrisation"
-        param_label = "K=$k, $sym_label"
+    for x_symmetrisation in Set(MaybeParity)
+        eigspace = EigenSpace(k; x_symmetrisation)
 
-        subspaces, subhamiltonians = zip(sub_hamiltonians(space, energies...; x_symmetrisation = symmetrisation, momentum = k)...)
+        subspaces, subhamiltonians = zip(sub_hamiltonians(space, eigspace, energies...)...)
         all_states = subspaces[end]
         H = subhamiltonians[end]
         max_e = energies[end]
 
-        @testset "State Properties $param_label" begin
+        @testset "State Properties $eigspace" begin
             for state in all_states                
-                if isnothing(symmetrisation)
+                if isnothing(x_symmetrisation)
                     @test momentum(state) == k
                 else
                     @test momentum(state.base_state) == k
@@ -37,11 +36,11 @@ for k in (-1, 0, 2)
             end
         end
 
-        @testset "Hamiltonian Hermitian $param_label" begin
+        @testset "Hamiltonian Hermitian $eigspace" begin
             @test all(isapprox.(H, H'))
         end
 
-        @testset "Energy Ordering $param_label" begin
+        @testset "Energy Ordering $eigspace" begin
             expected_subhamiltonians = trivial_sub_hamiltonians(space, subspaces)
 
             @test subhamiltonians == expected_subhamiltonians
@@ -53,7 +52,7 @@ for k in (-1, 0, 2)
             end
         end
 
-        @testset "Degeneracy Test $param_label" begin
+        @testset "Degeneracy Test $eigspace" begin
             equality_matrix = all_states .== permutedims(all_states)
 
             @test equality_matrix == I

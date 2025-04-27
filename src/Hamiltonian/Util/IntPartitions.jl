@@ -13,7 +13,7 @@ struct PartitionBuilder{N <: Unsigned}
 end
 
 """Alternative to Combinatorics.partitions which is ordered according to decreasing relativistic energy for a set of particles with those momenta."""
-energy_ordered_partitions(total::N) where {N <: Integer} = PartitionBuilder(force_unsigned(total))
+energy_ordered_partitions(total) = PartitionBuilder(force_unsigned(total))
 
 struct PartialPartition{N <: Unsigned}
     sequence::Vector{N}

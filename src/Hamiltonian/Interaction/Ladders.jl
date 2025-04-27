@@ -13,7 +13,7 @@ MonoLadder(n) = MonoLadder(n, n)
 zero(::Type{MonoLadder{N}}) where N = MonoLadder(zero(N))
 
 function diff_ladder(n_in::N, n_out::N) where {N <: Unsigned}
-    n_out > n_in ? MonoLadder(n_out - n_in, zero(N)) : MonoLadder(zero(N), n_in - n_out)
+    MonoLadder(sign_split(n_out, n_in)...)
 end
 
 +(operators::MonoLadder...) = MonoLadder(sum(map(op -> op.raising, operators)), sum(map(op -> op.lowering, operators)))
