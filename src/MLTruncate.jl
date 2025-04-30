@@ -19,4 +19,12 @@ include("Hamiltonian/Interaction/Phi4.jl")
 
 end
 
+module Learning
+
+include("Learning/Context.jl")
+include("Learning/NetworkStructure.jl")
+include("Learning/Training.jl")
+
+end
+
 end
