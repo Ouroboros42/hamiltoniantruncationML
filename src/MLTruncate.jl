@@ -5,6 +5,7 @@ module Hamiltonian
 include("Hamiltonian/Util/Conversions.jl")
 include("Hamiltonian/Util/Parity.jl")
 include("Hamiltonian/Util/IntPartitions.jl")
+include("Hamiltonian/Util/Stats.jl")
 include("Hamiltonian/FockSpace/States.jl")
 include("Hamiltonian/FockSpace/Symmetrised.jl")
 include("Hamiltonian/FockSpace/FockSpace.jl")
