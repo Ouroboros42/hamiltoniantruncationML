@@ -16,6 +16,8 @@ end
 const SymmetricState{F} = SymmetrisedFockState{Even, F}
 const AntisymmetricState{F} = SymmetrisedFockState{Odd, F}
 
+representative_fockstate(state::SymmetrisedFockState) = state.base_state
+
 ==(state1::S, state2::S) where { S <: SymmetrisedFockState } = state1.base_state == state2.base_state || state1.base_state == state2.flipped_state 
 
 iszero(::FieldState) = false

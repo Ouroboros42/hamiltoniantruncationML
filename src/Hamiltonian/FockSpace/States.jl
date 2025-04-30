@@ -1,4 +1,4 @@
-export FockState, n_particles, n_parity, momentum, iter_all, DictFockState, relevant_momenta, occupation_number, x_flipped, x_parity, frozen
+export FieldState, FockState, representative_fockstate, n_particles, n_parity, momentum, iter_all, DictFockState, relevant_momenta, occupation_number, x_flipped, x_parity, frozen
 
 import Base: ==, pairs, iterate, length, ImmutableDict, print
 
@@ -7,6 +7,8 @@ using MLStyle
 abstract type FieldState end
 
 abstract type FockState{K <: Signed, N <: Unsigned} <: FieldState end
+
+representative_fockstate(state::FockState) = state
 
 n_particles(state::FockState{K, N}) where {K, N} = sum(n for (k, n) in state; init=zero(N))
 n_parity(state::FockState) = number_parity(n_particles(state))
@@ -34,9 +36,9 @@ struct DictFockState{K <: Signed, N <: Unsigned, D <: AbstractDict{K, N}} <: Foc
     occupation_numbers::D
 end
 
-DictFockState{K, N}(occupation_numbers::Pair{K, N}...) where {K <: Signed, N <: Unsigned} = DictFockState(Dict(occupation_numbers))
+DictFockState{K, N}(occupation_numbers::Pair...) where {K <: Signed, N <: Unsigned} = DictFockState(Dict{K, N}(occupation_numbers))
 
-function DictFockState(occupation_numbers::Pair{K, N}...) where {K, N}
+function DictFockState(occupation_numbers::Pair...)
     DictFockState(Dict(signed(k) => force_unsigned(n) for (k, n) in occupation_numbers))
 end
 

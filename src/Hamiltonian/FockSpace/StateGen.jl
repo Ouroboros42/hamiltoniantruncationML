@@ -57,7 +57,7 @@ function nondegen_splits(momentum_splits, filter_needed::Bool, lexicographic_max
 
     Iterators.filter(momentum_splits) do (; momenta)
         !filter_needed || bound_func(momenta, lexicographic_max)
-    end 
+    end
 end
 
 function states_with_stationary(eigenspace::EigenSpace{K, N}, remaining_energy, pos_momenta, neg_momenta) where {K, N}
