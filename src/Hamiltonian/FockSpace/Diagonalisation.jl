@@ -10,7 +10,7 @@ function spectrum(hamiltonian, n_eigs::Integer)
     eigvecs = decomp.Q
     real_eigvals = Real.(decomp.eigenvalues)
     
-    eigvecs, real_eigvals
+    eigvecs[:, begin:begin+n_eigs-1], real_eigvals[begin:begin+n_eigs-1]
 end
 
 spectrum(hamiltonian) = spectrum(hamiltonian, size(hamiltonian, 1))
