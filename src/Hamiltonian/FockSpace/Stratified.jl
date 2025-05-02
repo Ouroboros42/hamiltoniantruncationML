@@ -4,7 +4,7 @@ using Logging
 
 function sub_spaces(space::BoundedFockSpace, eigenspace::EigenSpace, energies...)
     map(energies) do energy
-        states = collect(generate_states(SubSpace(space, eigenspace, energy)))
+        states = collect(generate_states(space, eigenspace, energy))
         
         if isempty(states)
             throw("Empty subspace created at energy $energy")
@@ -47,4 +47,4 @@ function sub_hamiltonians(space, eigenspace, energies...; is_sparse::Bool=true)
     map(=>, substates, hamiltionians) 
 end
 
-hamiltonian(space, eigenspace, energy; is_sparse::Bool=true) = only(sub_hamiltonians(space, eigenspace, energy; is_sparse)).second
+hamiltonian(space, eigenspace, energy; is_sparse::Bool=true) = only(sub_hamiltonians(space, eigenspace, energy; is_sparse))

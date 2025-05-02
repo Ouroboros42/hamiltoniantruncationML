@@ -4,32 +4,32 @@ using .IntPartitions
 
 import Base: isvalid
 
-function generate_states(subspace::SubSpace)
-    (net_pos_k, net_neg_k) = sign_split(subspace.eigenspace.momentum)
-    max_k_int = max_momentum(subspace) - abs(subspace.eigenspace.momentum)
+function generate_states(fockspace::BoundedFockSpace, eigenspace::EigenSpace, max_energy)
+    (net_pos_k, net_neg_k) = sign_split(eigenspace.momentum)
+    max_k_int = max_momentum(fockspace, max_energy) - abs(eigenspace.momentum)
 
     states = flatmap(0:max_k_int+1) do k_internal
-        gross_momentum_states(subspace, k_internal + net_pos_k, k_internal + net_neg_k)
+        gross_momentum_states(fockspace, eigenspace, max_energy, k_internal + net_pos_k, k_internal + net_neg_k)
     end
     
     # Zeros have already been filtered
-    symmetrise_states(states, subspace.eigenspace.x_symmetrisation, false)
+    symmetrise_states(states, eigenspace.x_symmetrisation, false)
 end
 
-function max_momentum(subspace::SubSpace)
-    floor(Unsigned, sqrt((subspace.max_energy^2 - 1)) / k_unit(subspace.fock_space))
+function max_momentum(fockspace::BoundedFockSpace, max_energy)
+    floor(Unsigned, sqrt(max_energy^2 - 1) / k_unit(fockspace))
 end
 
-function gross_momentum_states(subspace::SubSpace, pos_momentum, neg_momentum)
-    pos_momentum_splits = split_momentum(subspace, pos_momentum)
+function gross_momentum_states(fockspace::BoundedFockSpace, eigenspace::EigenSpace, max_energy, pos_momentum, neg_momentum)
+    pos_momentum_splits = split_momentum(fockspace, max_energy, pos_momentum)
 
     flatmap(pos_momentum_splits) do pos_split
-        neg_momentum_splits = split_momentum(subspace.fock_space, pos_split.remaining_energy, neg_momentum)
+        neg_momentum_splits = split_momentum(fockspace, pos_split.remaining_energy, neg_momentum)
 
-        filtered_neg_momentum_splits = nondegen_splits(neg_momentum_splits, pos_momentum == neg_momentum, pos_split.momenta, subspace.eigenspace.x_symmetrisation)
+        filtered_neg_momentum_splits = nondegen_splits(neg_momentum_splits, pos_momentum == neg_momentum, pos_split.momenta, eigenspace.x_symmetrisation)
 
         flatmap(filtered_neg_momentum_splits) do neg_split
-            states_with_stationary(subspace.eigenspace, neg_split.remaining_energy, pos_split.momenta, neg_split.momenta)
+            states_with_stationary(eigenspace, neg_split.remaining_energy, pos_split.momenta, neg_split.momenta)
         end
     end
 end
@@ -45,8 +45,6 @@ isvalid(split::MomentumSplit) = split.remaining_energy > 0
 function split_momentum(space::BoundedFockSpace, max_energy, gross_momentum)
     takewhile(isvalid, (MomentumSplit(space, max_energy, momenta) for momenta in energy_ordered_partitions(gross_momentum)))
 end
-
-split_momentum(subspace::SubSpace, gross_momentum) = split_momentum(subspace.fock_space, subspace.max_energy, gross_momentum)
 
 nondegen_splits(momentum_splits, filter_needed::Bool, lexicographic_bound::Vector{K}, x_symmetrisation::Nothing) where {K <: Unsigned} = momentum_splits
 function nondegen_splits(momentum_splits, filter_needed::Bool, lexicographic_max::Vector{K}, x_symmetrisation::Parity) where {K <: Unsigned}

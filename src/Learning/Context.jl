@@ -10,6 +10,4 @@ context_vec(v::Vector{R}) where {R <: Real} = v
 context_vec(space::BoundedFockSpace) = [ k_unit(space) ]
 context_vec(space::Phi4Space) = [ k_unit(space), coupling(space) ]
 
-context_vec(subspace::SubSpace) = context_vec(subspace.fock_space, subspace.max_energy)
-
 context_vec(args...) = vcat(map(context_vec, args)...)
