@@ -1,4 +1,4 @@
-export sub_spaces, sub_hamiltonians
+export sub_spaces, sub_hamiltonians, hamiltonian
 
 using Logging
 
@@ -46,3 +46,5 @@ function sub_hamiltonians(space, eigenspace, energies...; is_sparse::Bool=true)
 
     map(=>, substates, hamiltionians) 
 end
+
+hamiltonian(space, eigenspace, energy; is_sparse::Bool=true) = only(sub_hamiltonians(space, eigenspace, energy; is_sparse)).second
