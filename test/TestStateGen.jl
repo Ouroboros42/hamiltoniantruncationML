@@ -2,10 +2,8 @@ using MLTruncate.Hamiltonian
 
 using Base.Iterators, LinearAlgebra
 
-trivial_sub_matrices(gen_matrix, spaces) = map(gen_matrix, spaces)
-
-trivial_sub_hamiltonians(space, subspaces, is_sparse::Bool=true) = trivial_sub_matrices(subspaces) do subspace
-    hamiltonian(space, subspace, is_sparse)
+trivial_sub_hamiltonians(space, subspaces, is_sparse::Bool=true) = map(subspaces) do subspace
+    compute(hamiltonian(space), subspace, is_sparse)
 end
 
 size = 0.1

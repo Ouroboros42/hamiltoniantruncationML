@@ -22,31 +22,29 @@ representative_fockstate(state::SymmetrisedFockState) = state.base_state
 
 iszero(::FieldState) = false
 iszero(state::AntisymmetricState) = state.is_x_symmetric
-    
-# Matrix element functions assume fockstate_matrix commutes with x-parity 
 
-function matrix_element(fockstate_matrix, in_state::SymmetricState, out_state::SymmetricState)
+function element(matrix::NiceMatrix, in_state::SymmetricState, out_state::SymmetricState)
     @match in_state.is_x_symmetric + out_state.is_x_symmetric begin
-        &0 => fockstate_matrix(in_state.base_state, out_state.base_state) + fockstate_matrix(in_state.flipped_state, out_state.base_state)
-        &1 => fockstate_matrix(in_state.base_state, out_state.base_state) / sqrt(2)
-        &2 => fockstate_matrix(in_state.base_state, out_state.base_state)
+        &0 => element(matrix, in_state.base_state, out_state.base_state) + element(matrix, in_state.flipped_state, out_state.base_state)
+        &1 => element(matrix, in_state.base_state, out_state.base_state) / sqrt(2)
+        &2 => element(matrix, in_state.base_state, out_state.base_state)
     end
 end
 
-function diagonal_matrix_element(fockstate_matrix_diagonal, fockstate_matrix, state::SymmetricState)
+function diagonal_element(matrix::NiceMatrix, state::SymmetricState)
     if state.is_x_symmetric
-        fockstate_matrix_diagonal(state.base_state)
+        diagonal_element(matrix, state.base_state)
     else
-        fockstate_matrix_diagonal(state.base_state) + fockstate_matrix(state.base_state, state.flipped_state)
+        diagonal_element(matrix, state.base_state) + element(matrix, state.base_state, state.flipped_state)
     end
 end
 
-function matrix_element(fockstate_matrix, in_state::AntisymmetricState, out_state::AntisymmetricState)
-    fockstate_matrix(in_state.base_state, out_state.base_state) - fockstate_matrix(in_state.flipped_state, out_state.base_state)
+function element(matrix::NiceMatrix, in_state::AntisymmetricState, out_state::AntisymmetricState)
+    element(matrix, in_state.base_state, out_state.base_state) - element(matrix, in_state.flipped_state, out_state.base_state)
 end
 
-function diagonal_matrix_element(fockstate_matrix_diagonal, fockstate_matrix, state::AntisymmetricState)
-    fockstate_matrix_diagonal(state.base_state) - fockstate_matrix(state.base_state, state.flipped_state)
+function diagonal_element(matrix::NiceMatrix, state::AntisymmetricState)
+    diagonal_element(matrix, state.base_state) - element(matrix, state.base_state, state.flipped_state)
 end
 
 symmetrise_state(state::FockState, x_parity::Nothing) = state

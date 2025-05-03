@@ -38,7 +38,10 @@ struct MomentumSplit{K <: Unsigned, E}
     remaining_energy::E
     momenta::Vector{K}
 end
-MomentumSplit(space::BoundedFockSpace, available_energy::E, momenta::Vector{K}) where {K, E} = MomentumSplit{K, E}(available_energy - free_energy(space, momenta), momenta)
+
+function MomentumSplit(space::BoundedFockSpace{E}, available_energy, momenta::Vector{K}) where {K, E}
+    MomentumSplit{K, E}(convert(E, available_energy) - free_energy(space, momenta), momenta)
+end
 
 isvalid(split::MomentumSplit) = split.remaining_energy > 0
 

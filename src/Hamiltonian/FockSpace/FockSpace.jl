@@ -1,4 +1,4 @@
-export BoundedFockSpace, FockSpaceImpl, k_unit, free_energy
+export BoundedFockSpace, FockSpaceImpl, k_unit, free_energy, hamiltonian, FreeHamiltonian
 
 import Base.broadcastable
 
@@ -25,9 +25,17 @@ function free_energy(space::BoundedFockSpace{E}, state::FockState)::E where E
 end
 
 function free_energy(space::BoundedFockSpace{E}, state::SymmetrisedFockState)::E where E
-    free_energy(space, state.base_state)
+    free_energy(space, representative_fockstate(state))
 end
 
 function free_energy(space::BoundedFockSpace{E}, momenta)::E where E
     sum((free_energy(space, k) for k in momenta); init = zero(E))
 end
+
+struct FreeHamiltonian{E, F <: BoundedFockSpace{E}} <: NiceMatrix{E}
+    space::F
+end
+
+hamiltonian(space::BoundedFockSpace) = FreeHamiltonian(space)
+
+diagonal_element(hamiltonian::FreeHamiltonian, state::FockState) = free_energy(hamiltonian.space, state)
