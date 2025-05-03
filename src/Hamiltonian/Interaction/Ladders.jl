@@ -49,7 +49,7 @@ function field_matrix_element(::BoundedFockSpace{E}, n_in, n_out, (;raising, low
     sqrt(factorial(n_high, n_low)) * factorial(n_low, n_intermediate) / symmetry_factor
 end
 
-PHI4CONST = factorial(4) / (8 * pi)
+const PHI4CONST = factorial(4) / (8 * pi)
 
 function field_matrix_element(space::BoundedFockSpace{E}, in_state::FockState, out_state::FockState, ladders::LadderOperators)::E where E
     product = k_unit(space) * convert(E, PHI4CONST) 
