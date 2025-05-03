@@ -2,7 +2,7 @@ export sub_spaces, sub_hamiltonians, hamiltonian
 
 using Logging
 
-function sub_spaces(space::BoundedFockSpace, eigenspace::EigenSpace, energies...)
+function sub_spaces(space::BoundedFockSpace, eigenspace::EigenSpace, energies)
     map(energies) do energy
         states = collect(generate_states(space, eigenspace, energy))
         
@@ -16,7 +16,7 @@ end
 
 indices_of(items, sequence) = findfirst.(.==(items), Ref(sequence))
 
-function sub_matrices(matrix::NiceMatrix, substates::NTuple{N, Vector}, is_sparse::Bool = true) where N
+function sub_matrices(matrix::NiceMatrix, substates, is_sparse::Bool = true)
     allstates = union(substates...)
 
     @info "Computing matrix for $(length(allstates)) states"
@@ -36,14 +36,17 @@ function sub_matrices(matrix::NiceMatrix, substates::NTuple{N, Vector}, is_spars
     end
 end
 
-function sub_hamiltonians(space, eigenspace, energies...; is_sparse::Bool=true)
-    @info "Generating states"
-
-    substates = sub_spaces(space, eigenspace, energies...)
-
-    hamiltionians = sub_matrices(hamiltonian(space), substates, is_sparse)
-
-    map(=>, substates, hamiltionians) 
+function assemble_subspacehamiltonian(substates, H0, V, coupling)
+    substates => (@. H0 + coupling * V)
 end
 
-hamiltonian(space, eigenspace, energy; is_sparse::Bool=true) = only(sub_hamiltonians(space, eigenspace, energy; is_sparse))
+function sub_hamiltonians(space, eigenspace, energies, couplings; is_sparse::Bool=true)
+    @info "Generating states"
+
+    substates = sub_spaces(space, eigenspace, energies)
+
+    H0 = sub_matrices(FreeHamiltonian(space), substates, is_sparse)
+    V = sub_matrices(Phi4Interaction(space), substates, is_sparse)
+
+    assemble_subspacehamiltonian.(substates, H0, V, couplings)
+end

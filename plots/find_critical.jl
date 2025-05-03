@@ -5,23 +5,10 @@ function evaluate_mphys(free_space, max_energy, couplings, K = Int8, N = UInt8)
     (E0, E1) = map((Even, Odd)) do Pn
         eigenspace = EigenSpace{K, N}(x_symmetrisation=Even, n_parity = Pn)
 
-        states = collect(generate_states(free_space, eigenspace, max_energy))
-    
-        @info "Generated $(length(states)) N-$Pn states"
+        subhams = sub_hamiltonians(free_space, eigenspace, (max_energy,), couplings)
 
-        H0 = compute(FreeHamiltonian(free_space), states)
-
-        @info "Computed Free Hamiltonian"
-
-        V = compute(Phi4Interaction(free_space), states)
-
-        @info "Computed Interaction Hamiltonian"
-
-        map(couplings) do coupling
-            H = @. H0 + coupling * V
-
+        map(subhams) do (states, H)
             _, E = groundstate(H)
-
             E
         end
     end
@@ -31,4 +18,4 @@ function evaluate_mphys(free_space, max_energy, couplings, K = Int8, N = UInt8)
     plot(couplings, mphys, xlabel = "g", ylabel = "Mphys")
 end
 
-evaluate_mphys(FockSpaceImpl(Float32(2π / 8)), 20, 0:.01:5)
+evaluate_mphys(FockSpaceImpl(Float32(2π / 8)), 17, 0:.01:5)

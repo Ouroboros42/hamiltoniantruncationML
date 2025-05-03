@@ -2,22 +2,20 @@ using MLTruncate.Hamiltonian
 
 using Base.Iterators, LinearAlgebra
 
-trivial_sub_hamiltonians(space, subspaces, is_sparse::Bool=true) = map(subspaces) do subspace
-    compute(hamiltonian(space), subspace, is_sparse)
-end
+trivial_sub_hamiltonians(space, subspaces, couplings) = @. compute(hamiltonian(space, couplings), subspaces)
 
 size = 0.1
 coupling = 1
 k = 0
 energies = (3.1, 3.5, 3.9)
 
-space = Phi4Impl(size, coupling)
+space = FockSpaceImpl(size)
 
 for k in (-1, 0, 2)
     for x_symmetrisation in Set(MaybeParity)
         eigspace = EigenSpace(k; x_symmetrisation)
 
-        subspaces, subhamiltonians = zip(sub_hamiltonians(space, eigspace, energies...)...)
+        subspaces, subhamiltonians = zip(sub_hamiltonians(space, eigspace, energies, coupling)...)
         all_states = subspaces[end]
         H = subhamiltonians[end]
         max_e = energies[end]
@@ -39,7 +37,7 @@ for k in (-1, 0, 2)
         end
 
         @testset "Energy Ordering $eigspace" begin
-            expected_subhamiltonians = trivial_sub_hamiltonians(space, subspaces)
+            expected_subhamiltonians = trivial_sub_hamiltonians(space, subspaces, coupling)
 
             @test subhamiltonians == expected_subhamiltonians
 

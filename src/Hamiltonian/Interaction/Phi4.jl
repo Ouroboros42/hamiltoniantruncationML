@@ -61,4 +61,5 @@ function element(matrix::Phi4Interaction{E}, in_state::FockState, out_state::Foc
     end
 end
 
-hamiltonian(space::Phi4Space) = LinearCombination(FreeHamiltonian(space), (coupling(space), Phi4Interaction(space)))
+hamiltonian(space::BoundedFockSpace, coupling) = LinearCombination(FreeHamiltonian(space), (coupling, Phi4Interaction(space)))
+hamiltonian(space::Phi4Space) = hamiltonian(space, coupling)
