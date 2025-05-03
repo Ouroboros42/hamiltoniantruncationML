@@ -12,4 +12,8 @@ using Test
     @testset "State generation tests" begin
         include("./TestStateGen.jl")
     end
+
+    @testset "Hamiltonian Accuracy tests" begin
+        include("./TestAccuracy.jl")
+    end
 end
