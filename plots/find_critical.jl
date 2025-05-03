@@ -20,15 +20,15 @@ function evaluate_mphys(free_space, max_energy, couplings, K = Int8, N = UInt8)
         map(couplings) do coupling
             H = @. H0 + coupling * V
 
-            _, (E0, E1) = spectrum(H, 2)
+            _, E = groundstate(H)
 
-            E1 - E0
+            E
         end
     end
 
     mphys = E1 .- E0
     
-    plot(couplings, [E0 E1 mphys], label = ["E0" "E1" "Mphys"], xlabel = "g", ylabel = "E / m")
+    plot(couplings, mphys, xlabel = "g", ylabel = "Mphys")
 end
 
-evaluate_mphys(FockSpaceImpl(Float32(2π / 10)), 15, 0:.1:5)
+evaluate_mphys(FockSpaceImpl(Float32(2π / 8)), 20, 0:.01:5)
