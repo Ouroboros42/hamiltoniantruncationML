@@ -1,24 +1,11 @@
-export Phi4Space, Phi4Impl, k_unit, coupling, Phi4Interaction
+export Phi4Interaction
 
 using MLStyle
 using Combinatorics
 using SparseArrays
 import Base.Broadcast: broadcastable
 
-abstract type Phi4Space{E <: AbstractFloat} <: BoundedFockSpace{E} end
-
-struct Phi4Impl{E <: AbstractFloat} <: Phi4Space{E}
-    k_unit::E
-    coupling::E
-end
-
-Phi4Impl(k_unit::E, coupling::Real = zero(E)) where {E <: Real} = Phi4Impl(promoteto(float, k_unit, coupling)...)
-Phi4Impl(free_space::BoundedFockSpace{E}, coupling = zero(E)) where E = Phi4Impl(k_unit(free_space), coupling)
-
-k_unit(space::Phi4Impl) = space.k_unit
-coupling(space::Phi4Impl) = space.coupling
-
-struct Phi4Interaction{E, F <: BoundedFockSpace{E}} <: NiceMatrix{E}
+struct Phi4Interaction{E, F <: FockSpace{E}} <: NiceMatrix{E}
     space::F
 end
 
@@ -61,5 +48,4 @@ function element(matrix::Phi4Interaction{E}, in_state::FockState, out_state::Foc
     end
 end
 
-hamiltonian(space::BoundedFockSpace, coupling) = LinearCombination(FreeHamiltonian(space), (coupling, Phi4Interaction(space)))
-hamiltonian(space::Phi4Space) = hamiltonian(space, coupling)
+hamiltonian(space::FockSpace, coupling) = LinearCombination(FreeHamiltonian(space), (coupling, Phi4Interaction(space)))

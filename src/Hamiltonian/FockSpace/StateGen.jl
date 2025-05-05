@@ -4,7 +4,7 @@ using .IntPartitions
 
 import Base: isvalid
 
-function generate_states(fockspace::BoundedFockSpace, eigenspace::EigenSpace, max_energy)
+function generate_states(fockspace::FockSpace, eigenspace::EigenSpace, max_energy)
     (net_pos_k, net_neg_k) = sign_split(eigenspace.momentum)
     max_k_int = max_momentum(fockspace, max_energy) - abs(eigenspace.momentum)
 
@@ -16,11 +16,11 @@ function generate_states(fockspace::BoundedFockSpace, eigenspace::EigenSpace, ma
     symmetrise_states(states, eigenspace.x_symmetrisation, false)
 end
 
-function max_momentum(fockspace::BoundedFockSpace, max_energy)
+function max_momentum(fockspace::FockSpace, max_energy)
     floor(Unsigned, sqrt(max_energy^2 - 1) / k_unit(fockspace))
 end
 
-function gross_momentum_states(fockspace::BoundedFockSpace, eigenspace::EigenSpace, max_energy, pos_momentum, neg_momentum)
+function gross_momentum_states(fockspace::FockSpace, eigenspace::EigenSpace, max_energy, pos_momentum, neg_momentum)
     pos_momentum_splits = split_momentum(fockspace, max_energy, pos_momentum)
 
     flatmap(pos_momentum_splits) do pos_split
@@ -39,13 +39,13 @@ struct MomentumSplit{K <: Unsigned, E}
     momenta::Vector{K}
 end
 
-function MomentumSplit(space::BoundedFockSpace{E}, available_energy, momenta::Vector{K}) where {K, E}
+function MomentumSplit(space::FockSpace{E}, available_energy, momenta::Vector{K}) where {K, E}
     MomentumSplit{K, E}(convert(E, available_energy) - free_energy(space, momenta), momenta)
 end
 
 isvalid(split::MomentumSplit) = split.remaining_energy > 0
 
-function split_momentum(space::BoundedFockSpace, max_energy, gross_momentum)
+function split_momentum(space::FockSpace, max_energy, gross_momentum)
     takewhile(isvalid, (MomentumSplit(space, max_energy, momenta) for momenta in energy_ordered_partitions(gross_momentum)))
 end
 

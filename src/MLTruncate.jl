@@ -1,5 +1,11 @@
 module MLTruncate
 
+using Plots
+
+function __init__()
+    gr(show = true)
+end
+
 module Hamiltonian
 
 include("Hamiltonian/Util/Conversions.jl")

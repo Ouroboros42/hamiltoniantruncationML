@@ -37,7 +37,7 @@ function momentum(ladder::LadderOperators{K, N}) where {K, N}
     sum(k * occupation_change(mono) for (k, mono) in pairs(ladder); init=zero(K))
 end
 
-function field_matrix_element(::BoundedFockSpace{E}, n_in, n_out, (;raising, lowering)::MonoLadder)::E where E
+function field_matrix_element(::FockSpace{E}, n_in, n_out, (;raising, lowering)::MonoLadder)::E where E
     n_intermediate = n_in - lowering
 
     if !(0 <= n_intermediate == n_out - raising); return 0 end
@@ -51,7 +51,7 @@ end
 
 const PHI4CONST = factorial(4) / (8 * pi)
 
-function field_matrix_element(space::BoundedFockSpace{E}, in_state::FockState, out_state::FockState, ladders::LadderOperators)::E where E
+function field_matrix_element(space::FockSpace{E}, in_state::FockState, out_state::FockState, ladders::LadderOperators)::E where E
     product = k_unit(space) * convert(E, PHI4CONST) 
     energy_product = one(E)
 

@@ -4,12 +4,12 @@ using Base.Iterators, LinearAlgebra
 
 trivial_sub_hamiltonians(space, subspaces, couplings) = @. compute(hamiltonian(space, couplings), subspaces)
 
-size = 0.1
+size = 70
 coupling = 1
 k = 0
 energies = (3.1, 3.5, 3.9)
 
-space = FockSpaceImpl(size)
+space = FockSpace(size)
 
 for k in (-1, 0, 2)
     for x_symmetrisation in Set(MaybeParity)

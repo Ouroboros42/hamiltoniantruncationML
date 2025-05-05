@@ -8,7 +8,7 @@ states = [
     S(3 => 1, 0 => 1)
 ]
 
-space = FockSpaceImpl(2π / 10)
+space = FockSpace(10)
 
 Mint = compute(Phi4Interaction(space), states)
 

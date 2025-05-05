@@ -5,16 +5,18 @@ using ..Hamiltonian
 using Plots, Measurements, StatsPlots
 using Lux, Random, Optimisers, Zygote
 
-function __init__()
-    gr(show = true)
+import Lux.apply, Lux.Training.TrainState
+
+function apply(trainstate::TrainState, x)
+    apply(trainstate.model, x, trainstate.parameters, trainstate.states)    
 end
 
 function normalise_components(components)
     abs.(components)
 end
 
-function learn_components(model, fock_space::Phi4Space, eigenspace::EigenSpace, energy_levels, n_components)
-    subhams = sub_hamiltonians(fock_space, eigenspace, energy_levels...)
+function learn_components(model, fock_space::FockSpace, eigenspace::EigenSpace, energy_levels, coupling, n_components)
+    subhams = sub_hamiltonians(fock_space, eigenspace, energy_levels, coupling)
 
     rng = Random.default_rng()
     Random.seed!(rng, 0)
@@ -23,7 +25,7 @@ function learn_components(model, fock_space::Phi4Space, eigenspace::EigenSpace, 
     optimiser = Adam(0.001f0)
 
     weights, lux_state = Lux.setup(rng, model) |> device
-    train_state = Training.TrainState(model, weights, lux_state, optimiser)
+    train_state = TrainState(model, weights, lux_state, optimiser)
 
     data = Float64[]
 
@@ -31,7 +33,7 @@ function learn_components(model, fock_space::Phi4Space, eigenspace::EigenSpace, 
         context = context_vec(fock_space, E_max)
 
         eigstates, eigenergies = spectrum(H, n_components)
-        predicted_components, lux_state = Lux.apply(model, (states, context), weights, lux_state)
+        predicted_components, lux_state = apply(train_state, (states, context))
 
         components = normalise_components(eigstates)
 
