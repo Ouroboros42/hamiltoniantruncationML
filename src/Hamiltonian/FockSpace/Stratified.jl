@@ -41,9 +41,15 @@ function assemble_subspacehamiltonian(substates, H0, V, coupling)
 end
 
 function sub_hamiltonians(space, eigenspace, energies, couplings; is_sparse::Bool=true)
+    """Generate hamiltonians for Phi4 theories with the given couplings, cutoff at the given max energies. Broadcasts over energies, couplings."""
+
     @info "Generating states"
 
     substates = sub_spaces(space, eigenspace, energies)
+
+    if substates isa AbstractArray{<:FieldState}
+        substates = Ref(substates)
+    end
 
     H0 = sub_matrices(FreeHamiltonian(space), substates, is_sparse)
     V = sub_matrices(Phi4Interaction(space), substates, is_sparse)

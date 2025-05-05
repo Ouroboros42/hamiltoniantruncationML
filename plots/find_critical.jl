@@ -5,10 +5,10 @@ function evaluate_mphys(free_space, max_energy, couplings, K = Int8, N = UInt8)
     (E0, E1) = map((Even, Odd)) do Pn
         eigenspace = EigenSpace{K, N}(x_symmetrisation=Even, n_parity = Pn)
 
-        subhams = sub_hamiltonians(free_space, eigenspace, (max_energy,), couplings)
+        subhams = sub_hamiltonians(free_space, eigenspace, max_energy, couplings)
 
         map(subhams) do (states, H)
-            _, E = groundstate(H)
+            components, E = groundstate(H)
             E
         end
     end
