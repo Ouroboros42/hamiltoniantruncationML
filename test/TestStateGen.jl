@@ -15,7 +15,7 @@ for k in (-1, 0, 2)
     for x_symmetrisation in Set(MaybeParity)
         eigspace = EigenSpace(k; x_symmetrisation)
 
-        subspaces, subhamiltonians = zip(sub_hamiltonians(space, eigspace, energies, coupling)...)
+        subspaces, subhamiltonians = zip(((info.states, info.hamiltonian) for info in sub_hamiltonians(space, eigspace, energies, coupling))...)
         all_states = subspaces[end]
         H = subhamiltonians[end]
         max_e = energies[end]

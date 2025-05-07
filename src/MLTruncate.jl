@@ -27,7 +27,6 @@ end
 
 module Learning
 
-include("Learning/Context.jl")
 include("Learning/NetworkStructure.jl")
 include("Learning/Training.jl")
 

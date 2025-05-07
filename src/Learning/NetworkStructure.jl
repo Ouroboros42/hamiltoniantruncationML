@@ -17,15 +17,15 @@ function apply_layers(layers, input)
     input
 end
 
-function state_eating_net(context_dims, output_dims, state_layer_dims, hidden_layer_dims; activation = tanh, out_activation = logistic)
+function state_eating_net(output_dims, state_layer_dims, hidden_layer_dims; context_dims = 3, activation = tanh, out_activation = logistic)
     state_encoding_dims = state_layer_dims[end]
-
+    
     @compact(
         initial_encoding = zeros(state_encoding_dims),
         state_encoding_layers = dense_layers((2 + context_dims + state_encoding_dims, state_layer_dims...), activation),
-        processing_layers = dense_layers((state_encoding_dims, hidden_layer_dims...), activation),
+        processing_layers = dense_layers((context_dims + state_encoding_dims, hidden_layer_dims...), activation),
         last_layer = Dense(hidden_layer_dims[end], output_dims, out_activation)
-    ) do (states, context)
+    ) do (context, states)
         output = mapreduce(vcat, states) do state
             encoding = initial_encoding
 
@@ -33,7 +33,7 @@ function state_eating_net(context_dims, output_dims, state_layer_dims, hidden_la
                 encoding = apply_layers(state_encoding_layers, [ momentum; count; context; encoding ])
             end
 
-            permutedims(last_layer(apply_layers(processing_layers, encoding)))
+            permutedims(last_layer(apply_layers(processing_layers, [ context; encoding ])))
         end
 
         @return output
