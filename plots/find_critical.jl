@@ -7,7 +7,7 @@ function evaluate_mphys(free_space, max_energy, couplings, K = Int8, N = UInt8)
         map((E0 = Even, E1 = Odd)) do Pn
             eigenspace = EigenSpace{K, N}(x_symmetrisation=Even, n_parity = Pn)
 
-            subhams = sub_hamiltonians(free_space, eigenspace, max_energy, couplings, include_states=false)
+            subhams = sub_hamiltonians(free_space, eigenspace, max_energy, couplings)
 
             map(subhams) do (; hamiltonian)
                 components, E = groundstate(hamiltonian)
@@ -18,8 +18,8 @@ function evaluate_mphys(free_space, max_energy, couplings, K = Int8, N = UInt8)
     
     mphys = E1 .- E0
 
-    plt = plot(couplings, mphys, xlabel = "g", ylabel = "Mphys", legend=false)
-    savefig(plt, "$PLOT_OUT/$plot_name.png")
+    plt = plot(couplings, mphys, xlabel = L"g", ylabel = L"m_{\mathrm{phys}}", legend=false)
+    savefig(plt, "$PLOT_OUT/$plot_name.pdf")
 end
 
-evaluate_mphys(FockSpace{Float32}(8), 22, 0:.01:5)
+evaluate_mphys(FockSpace{Float32}(8), 23, 0:.01:5)

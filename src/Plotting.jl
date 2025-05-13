@@ -3,6 +3,7 @@ export PLOT_ROOT, PLOT_OUT, PLOT_CACHE, sanitise
 using Reexport
 @reexport using Plots
 @reexport using CacheVariables
+@reexport using LaTeXStrings
 
 function __init__()
     gr(show = true)
