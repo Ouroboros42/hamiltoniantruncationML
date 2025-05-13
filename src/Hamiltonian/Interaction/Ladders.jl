@@ -1,6 +1,5 @@
 export LadderOperators, min_ladders, with_number_ops, rank 
 
-using Combinatorics
 import Base: +, zero
 
 struct MonoLadder{N <: Unsigned}

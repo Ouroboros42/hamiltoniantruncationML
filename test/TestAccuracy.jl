@@ -1,4 +1,4 @@
-using MLTruncate.Hamiltonian
+using MLTruncate
 
 S = DictFockState{Int8, UInt8}
 

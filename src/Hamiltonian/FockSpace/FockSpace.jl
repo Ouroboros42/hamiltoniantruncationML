@@ -2,9 +2,6 @@ export FockSpace, k_unit, free_energy, hamiltonian, FreeHamiltonian
 
 import Base: broadcastable, size
 
-using Base.Iterators
-using .IntPartitions
-
 twoPi(Ftype) = convert(Ftype, 2π)
 angular_inverse(T, x)::T = twoPi(T) / convert(T, x)
 angular_inverse(x) = angular_inverse(typeof(x), x)

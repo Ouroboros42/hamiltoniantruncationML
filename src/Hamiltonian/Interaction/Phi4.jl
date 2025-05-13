@@ -1,8 +1,5 @@
 export Phi4Interaction
 
-using MLStyle
-using Combinatorics
-using SparseArrays
 import Base.Broadcast: broadcastable
 
 struct Phi4Interaction{E, F <: FockSpace{E}} <: NiceMatrix{E}

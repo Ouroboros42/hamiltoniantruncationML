@@ -1,7 +1,6 @@
 export state_eating_net
 
-using ..Hamiltonian
-using Lux, LogExpFunctions
+
 
 adjacent_pairs(iter) = zip(iter, Iterators.drop(iter, 1))
 

@@ -1,5 +1,3 @@
-using ArnoldiMethod
-
 export spectrum, groundstate
 
 function spectrum(hamiltonian, n_eigs::Integer)

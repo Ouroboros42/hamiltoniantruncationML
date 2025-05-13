@@ -1,5 +1,4 @@
-using MLTruncate.Hamiltonian, MLTruncate.Learning
-using Plots
+using MLTruncate
 
 function evaluate_mphys(space, low_Emax, high_Emax, n_selected_states, couplings, n_epochs, recurrent_dims, processing_dims, K = Int8, N = UInt8)
     E0, E1 = map((Even, Odd)) do Pn

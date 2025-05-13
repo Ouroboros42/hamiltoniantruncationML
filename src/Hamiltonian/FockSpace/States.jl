@@ -2,8 +2,6 @@ export FieldState, FockState, representative_fockstate, n_particles, n_parity, m
 
 import Base: ==, pairs, iterate, length, ImmutableDict, print
 
-using MLStyle
-
 abstract type FieldState end
 
 abstract type FockState{K <: Signed, N <: Unsigned} <: FieldState end

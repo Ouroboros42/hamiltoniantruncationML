@@ -1,4 +1,4 @@
-using MLTruncate.Hamiltonian
+using MLTruncate
 
 using Base.Iterators, LinearAlgebra
 

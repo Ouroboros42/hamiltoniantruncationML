@@ -1,7 +1,5 @@
 export sub_spaces, sub_hamiltonians, hamiltonian
 
-using Logging
-
 function sub_spaces(space::FockSpace, eigenspace::EigenSpace, energies)
     map(energies) do energy
         states = collect(generate_states(space, eigenspace, energy))

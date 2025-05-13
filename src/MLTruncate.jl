@@ -1,12 +1,13 @@
 module MLTruncate
 
-using Plots
+using Base.Iterators
+using Logging
+using MLStyle, DataStructures
+using Combinatorics, SparseArrays, ArnoldiMethod
+using Measurements, StatsPlots
+using Lux, Random, Optimisers, Zygote, LogExpFunctions
 
-function __init__()
-    gr(show = true)
-end
-
-module Hamiltonian
+include("Plotting.jl")
 
 include("Hamiltonian/Util/Conversions.jl")
 include("Hamiltonian/Util/Parity.jl")
@@ -23,13 +24,7 @@ include("Hamiltonian/FockSpace/Stratified.jl")
 include("Hamiltonian/Interaction/Ladders.jl")
 include("Hamiltonian/Interaction/Phi4.jl")
 
-end
-
-module Learning
-
 include("Learning/NetworkStructure.jl")
 include("Learning/Training.jl")
-
-end
 
 end

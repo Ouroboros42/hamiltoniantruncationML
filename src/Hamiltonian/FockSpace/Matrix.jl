@@ -1,19 +1,17 @@
 export compute
 
-using Combinatorics, SparseArrays
-
 abstract type NiceMatrix{E} end
 
 has_offdiagonal(::NiceMatrix) = false
 
-function compute(matrix::NiceMatrix{E}, states, ::Type{Out}) where {E, Out <: AbstractMatrix{E}}
-    return compute!(matrix, states, Out(undef, length(states), length(states)))
+function compute(::Type{Out}, matrix::NiceMatrix{E}, states, args...; kwargs...) where {E, Out <: AbstractMatrix{E}}
+    return compute!(Out(undef, length(states), length(states)), matrix, states, args...; kwargs...)
 end
-compute_dense(matrix::NiceMatrix{E}, states) where E = compute(matrix, states, Matrix{E})
-compute_sparse(matrix::NiceMatrix{E}, states) where E = compute(matrix, states, SparseMatrixCSC{E, keytype(states)})
-compute(matrix::NiceMatrix, states, is_sparse::Bool = true) = is_sparse ? compute_sparse(matrix, states) : compute_dense(matrix, states)
+compute_dense(matrix::NiceMatrix{E}, args...; kwargs...) where E = compute(Matrix{E}, matrix, args...; kwargs...)
+compute_sparse(matrix::NiceMatrix{E}, states, args...; kwargs...) where E = compute(SparseMatrixCSC{E, keytype(states)}, matrix, states, args...; kwargs...)
+compute(args...; is_sparse::Bool = true, kwargs...) = is_sparse ? compute_sparse(args...; kwargs...) : compute_dense(args...; kwargs...)
 
-function compute!(matrix::NiceMatrix, states, output)
+function compute!(output, matrix::NiceMatrix, states)
     indexed_states = collect(enumerate(states))
 
     for (i, state) in indexed_states        
@@ -22,14 +20,38 @@ function compute!(matrix::NiceMatrix, states, output)
 
     if has_offdiagonal(matrix)
         for ((i_in, in_state), (i_out, out_state)) in combinations(indexed_states, 2)
-            elem = element(matrix, in_state, out_state)
-
-            output[i_out, i_in] = elem
-            output[i_in, i_out] = conj(elem)
+            set_offdiagonal!(output, matrix, i_in, in_state, i_out, out_state)
         end
     end
 
     output
+end
+
+function compute!(output, matrix::NiceMatrix, states, base_computed, base_states)
+    base_indices = keys(base_states)
+
+    output[base_indices, base_indices] = base_computed
+    
+    extend_indices = map(i -> i + length(base_states), keys(states))
+
+    compute!(matrix, states, output[extend_indices, extend_indices])
+
+    if has_offdiagonal(matrix)
+        for (i_base, base_state) in zip(base_indices, base_states)
+            for (i_extend, extend_state) in zip(extend_indices, extend_states)
+                set_offdiagonal!(output, matrix, i_base, base_state, i_extend, extend_state)
+            end
+        end
+    end
+
+    output
+end
+
+function set_offdiagonal!(output, matrix::NiceMatrix, i_in, in_state, i_out, out_state)
+    elem = element(matrix, in_state, out_state)
+
+    output[i_out, i_in] = elem
+    output[i_in, i_out] = conj(elem)
 end
 
 # Default implementation (zero matrix). Allows only diagonal or off-diagonal elements to be defined.

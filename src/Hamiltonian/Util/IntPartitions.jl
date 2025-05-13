@@ -1,12 +1,6 @@
-module IntPartitions
-
 export energy_ordered_partitions
 
-import ..Hamiltonian: force_unsigned
-
 import Base: iterate, IteratorSize, last, isempty
-
-using DataStructures
 
 struct PartitionBuilder{N <: Unsigned}
     total::N
@@ -71,6 +65,4 @@ function iterate(builder::PartitionBuilder{N}, state::PartitionProgress{N}) wher
     end
 
     nothing
-end
-
 end

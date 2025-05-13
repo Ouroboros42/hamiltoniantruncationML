@@ -1,4 +1,4 @@
-using MLTruncate.Hamiltonian
+using MLTruncate
 
 @testset "Equality tests" begin
     @test DictFockState(1 => 1, 0 => 2) == DictFockState(1 => 1, 0 => 2)

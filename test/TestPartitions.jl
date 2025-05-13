@@ -1,4 +1,4 @@
-using MLTruncate.Hamiltonian.IntPartitions
+using MLTruncate
 
 @testset "Known Partitions" begin
     @test collect(energy_ordered_partitions(0)) == [[]]

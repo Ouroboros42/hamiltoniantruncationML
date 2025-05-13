@@ -1,7 +1,5 @@
 export generate_states
 
-using .IntPartitions
-
 import Base: isvalid
 
 function generate_states(fockspace::FockSpace, eigenspace::EigenSpace, max_energy)

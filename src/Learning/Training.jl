@@ -1,10 +1,5 @@
 export learn_components!, apply, setup_model, make_context, state_scorer, getstates, getscores
 
-using ..Hamiltonian
-
-using Plots, Measurements, StatsPlots
-using Lux, Random, Optimisers, Zygote
-
 import Lux.apply, Lux.Training.TrainState
 
 apply(trainstate::TrainState, context, states) = apply(trainstate, (context, states))
