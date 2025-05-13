@@ -34,11 +34,15 @@ function sub_matrices(matrix::NiceMatrix, substates, is_sparse::Bool = true)
     end
 end
 
-function assemble_subspacehamiltonian(states, H0, V, coupling, max_energy)
-    (; coupling, max_energy, states, hamiltonian = (@. H0 + coupling * V))
+function assemble_subspacehamiltonian(states, args...)
+    (; states, assemble_subspacehamiltonian(args...)...)
 end
 
-function sub_hamiltonians(space, eigenspace, energies, couplings; is_sparse::Bool=true)
+function assemble_subspacehamiltonian(H0, V, coupling, max_energy)
+    (; coupling, max_energy, hamiltonian = (@. H0 + coupling * V))
+end
+
+function sub_hamiltonians(space, eigenspace, energies, couplings; is_sparse::Bool=true, include_states::Bool=true)
     """Generate hamiltonians for Phi4 theories with the given couplings, cutoff at the given max energies. Broadcasts over energies, couplings."""
 
     @info "Generating states"
@@ -52,5 +56,9 @@ function sub_hamiltonians(space, eigenspace, energies, couplings; is_sparse::Boo
     H0 = sub_matrices(FreeHamiltonian(space), substates, is_sparse)
     V = sub_matrices(Phi4Interaction(space), substates, is_sparse)
 
-    assemble_subspacehamiltonian.(substates, H0, V, couplings, energies)
+    if include_states
+        assemble_subspacehamiltonian.(substates, H0, V, couplings, energies)
+    else
+        assemble_subspacehamiltonian.(H0, V, couplings, energies)
+    end
 end
