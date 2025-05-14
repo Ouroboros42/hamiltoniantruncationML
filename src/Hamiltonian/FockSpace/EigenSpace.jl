@@ -1,4 +1,4 @@
-export EigenSpace
+export EigenSpace, DEFAULT_EIGENSPACE
 
 import Base: show, print
 
@@ -15,3 +15,5 @@ EigenSpace(momentum::K = 0, args...; kwargs...) where K = EigenSpace{signed(K), 
 
 print(io::IO, eigenspace::EigenSpace) = print(io, "K=$(eigenspace.momentum) X-$(parity_string(eigenspace.x_symmetrisation)) N-$(parity_string(eigenspace.n_parity))")
 show(io::IO, mime::MIME"text/plain", eigenspace::EigenSpace) = print(io, "$(typeof(eigenspace)): $(eigenspace)")
+
+const DEFAULT_EIGENSPACE = EigenSpace{Int8, UInt8}(0, Even, Even)

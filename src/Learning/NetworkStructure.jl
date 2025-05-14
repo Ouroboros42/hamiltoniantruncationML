@@ -1,7 +1,5 @@
 export state_eating_net
 
-
-
 adjacent_pairs(iter) = zip(iter, Iterators.drop(iter, 1))
 
 function dense_layers(neuron_counts, args...; kwargs...)
@@ -25,7 +23,7 @@ function state_eating_net(output_dims, state_layer_dims, hidden_layer_dims; cont
         processing_layers = dense_layers((context_dims + state_encoding_dims, hidden_layer_dims...), activation),
         last_layer = Dense(hidden_layer_dims[end], output_dims, out_activation)
     ) do (context, states)
-        output = mapreduce(vcat, states) do state
+        output = stack(map(states) do state
             encoding = initial_encoding
 
             for (momentum, count) in pairs(representative_fockstate(state))
@@ -33,7 +31,7 @@ function state_eating_net(output_dims, state_layer_dims, hidden_layer_dims; cont
             end
 
             permutedims(last_layer(apply_layers(processing_layers, [ context; encoding ])))
-        end
+        end; dims = 1)
 
         @return output
     end

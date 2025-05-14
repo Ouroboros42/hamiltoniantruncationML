@@ -1,4 +1,4 @@
-export learn_components!, apply, setup_model, make_context, state_scorer, getstates, getscores
+export learn_components!, apply, setup_model, make_context, state_scorer, sort_by_score, normalise_components
 
 import Lux.apply, Lux.Training.TrainState
 
@@ -9,24 +9,13 @@ function apply(trainstate::TrainState, x)
     output
 end
 
-struct ScoredStates{S, F}
-    states::S
-    scores::F
-end
-
-getstates(scored::ScoredStates) = scored.states
-getscores(scored::ScoredStates) = scored.scores
-
-state_scorer(trainstate::TrainState, context) = states -> ScoredStates(states, apply(trainstate, (context, states)))
-state_scorer(trainstate::TrainState, args...) = state_scorer(trainstate, make_context(args...))
-
 normalise_components(components) = abs.(components)
 normalise_components((components, _)::Tuple) = normalise_components(components)
 
 function setup_model(model)
     rng = Random.default_rng()
     Random.seed!(rng, 0)
-    device = gpu_device()
+    device = cpu_device()
 
     optimiser = Adam(0.001f0)
 
@@ -39,42 +28,47 @@ make_context(space::FockSpace, coupling, max_energy) = [ k_unit(space); coupling
 
 i_wrap(collection, i) = (i - 1) % length(collection) + 1
 
-function learn_components!(train_state, fockspace::FockSpace, eigenspace::EigenSpace, max_energies, couplings, n_components, n_epochs;
+function learn_components!(train_states, fockspace::FockSpace, eigenspace::EigenSpace, max_energies, couplings, n_components, n_epochs;
+    model_labels = nothing,
     backend = AutoZygote(), lossfunc = MSELoss()    
 )
-    data = Float64[]
+    legend_kwargs = isnothing(model_labels) ? (; legend = false) : (; label = permutedims(model_labels))
+    plot_kwargs = (; legend_kwargs...,
+        xlabel="#Training Steps", ylabel="log(loss)"
+    )
 
     solved_subhams = map(sub_hamiltonians(fockspace, eigenspace, max_energies, couplings)) do subspace
-        (;
-            subspace...,
+        (; subspace...,
             context = make_context(fockspace, subspace.coupling, subspace.max_energy),
             components = normalise_components(spectrum(subspace.hamiltonian, n_components))
         )
     end
 
+    n_subspaces = length(solved_subhams)
+    n_training_steps = n_epochs * n_subspaces
+
+    loss_history = fill(NaN, (n_training_steps, length(train_states)))
+
     for i_epoch in 1:n_epochs
         display_index = i_wrap(solved_subhams, i_epoch)
 
         for (i_subspace, (; coupling, states, context, components)) in enumerate(solved_subhams)
-            grads, loss, stats, train_state = Training.single_train_step!(backend, lossfunc, ((context, states), components), train_state)
+            i_training_step = n_subspaces * (i_epoch - 1) + i_subspace
+
+            losses = map(train_states) do train_state
+                grads, loss, stats, train_state = Training.single_train_step!(backend, lossfunc, ((context, states), components), train_state)
+                loss
+            end            
             
-            push!(data, log(loss))
+            loss_history[i_training_step, :] = log.(permutedims(losses))
 
             if display_index == i_subspace
-                predicted_components = apply(train_state, context, states)
-
-                training = plot(data, xlabel="#Training Steps", ylabel="log(loss)", legend=false)
-
-                side_by_sides = map(1:n_components, eachcol(components), eachcol(predicted_components)) do i, actual, prediction
-                    groupedbar(hcat(actual, prediction), title = "State $i Components, g=$coupling", label = ["True" "Prediction"])
-                end
-
-                plot(training, side_by_sides..., layout=(n_components + 1, 1), size=(1300, 700))
+                plot(loss_history; plot_kwargs...)
             end
         end
 
         @info "Completed training epoch $i_epoch"
     end        
 
-    train_state
+    (; loss_history, train_states, plot_kwargs)
 end

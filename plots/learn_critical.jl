@@ -1,20 +1,22 @@
 using MLTruncate
 
 function evaluate_mphys(space, low_Emax, high_Emax, n_selected_states, couplings, n_epochs, recurrent_dims, processing_dims, K = Int8, N = UInt8)
-    E0, E1 = map((Even, Odd)) do Pn
-        eigenspace = EigenSpace{K, N}(x_symmetrisation=Even, n_parity = Pn)
+    plot_name = sanitise("Learned-Mphys_g=$(couplings)_L=$(size(free_space))_E=$(low_Emax)-$(high_Emax)_N=$n_selected_states")
 
-        model = setup_model(state_eating_net(1, recurrent_dims, processing_dims))
-        learn_components!(model, space, eigenspace, low_Emax, couplings, 1, n_epochs)
+    (; E0, E1) = cache("$PLOT_CACHE/$plot_name.bson") do
+        map((; E0 = Even, E1 = Odd)) do Pn
+            eigenspace = EigenSpace{K, N}(x_symmetrisation=Even, n_parity = Pn)
 
-        map(couplings) do coupling
-            scored_states = map(state_scorer(model, space, coupling, low_Emax), generate_states(space, eigenspace, high_Emax))
-            sort!(scored_states, by=getscores, rev=true)
-            selected_states = map(getstates, scored_states[1:min(n_selected_states, end)])
+            model = setup_model(state_eating_net(1, recurrent_dims, processing_dims))
+            learn_components!(model, space, eigenspace, low_Emax, couplings, 1, n_epochs)
 
-            H = compute(hamiltonian(space, coupling), selected_states)
+            map(couplings) do coupling
+                selected_states = sort_by_score(state_scorer(model, space, coupling, low_Emax), generate_states(space, eigenspace, high_Emax))
 
-            groundstate(H)[2]
+                H = compute(hamiltonian(space, coupling), selected_states)
+
+                groundstate(H)[2]
+            end
         end
     end
 

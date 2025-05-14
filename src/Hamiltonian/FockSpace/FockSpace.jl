@@ -28,6 +28,8 @@ function FockSpace(size)
     FockSpaceImpl{typeof(size)}(angular_inverse(size))
 end
 
+free_energy(space::FockSpace) = state -> free_energy(space, state)
+
 function free_energy(space::FockSpace{E}, momentum::Integer)::E where E
     sqrt(1 + (k_unit(space) * momentum)^2)
 end

@@ -1,7 +1,7 @@
 using MLTruncate
 
 function evaluate_mphys(free_space, max_energy, couplings, K = Int8, N = UInt8)
-    plot_name = sanitise("Mphys_g=$(couplings)_L=$(size(free_space))_E=$max_energy")
+    plot_name = sanitise("find_critical/Mphys_g=$(couplings)_L=$(size(free_space))_E=$max_energy")
     
     (; E0, E1) = cache("$PLOT_CACHE/$plot_name.bson") do
         map((E0 = Even, E1 = Odd)) do Pn
@@ -10,8 +10,7 @@ function evaluate_mphys(free_space, max_energy, couplings, K = Int8, N = UInt8)
             subhams = sub_hamiltonians(free_space, eigenspace, max_energy, couplings)
 
             map(subhams) do (; hamiltonian)
-                components, E = groundstate(hamiltonian)
-                E
+                groundstate(hamiltonian)[2]
             end
         end
     end

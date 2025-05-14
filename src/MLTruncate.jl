@@ -4,8 +4,9 @@ using Base.Iterators
 using Logging
 using MLStyle, DataStructures
 using Combinatorics, SparseArrays, ArnoldiMethod
-using Measurements, StatsPlots
-using Lux, Random, Optimisers, Zygote, LogExpFunctions
+using Measurements
+using Lux
+using Random, Optimisers, Zygote, LogExpFunctions
 
 include("Plotting.jl")
 
@@ -26,5 +27,6 @@ include("Hamiltonian/Interaction/Phi4.jl")
 
 include("Learning/NetworkStructure.jl")
 include("Learning/Training.jl")
+include("Learning/Selection.jl")
 
 end
