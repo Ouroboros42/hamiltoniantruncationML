@@ -29,14 +29,11 @@ make_context(space::FockSpace, coupling, max_energy) = [ k_unit(space); coupling
 i_wrap(collection, i) = (i - 1) % length(collection) + 1
 
 function learn_components!(train_states, fockspace::FockSpace, eigenspace::EigenSpace, max_energies, couplings, n_components, n_epochs;
-    model_labels = nothing,
+    plot_kwargs = (; ),
+    loss_plot_kwargs = (; ),
+    corr_plot_kwargs = (; ),
     backend = AutoZygote(), lossfunc = MSELoss()    
 )
-    legend_kwargs = isnothing(model_labels) ? (; legend = false) : (; label = permutedims(model_labels))
-    plot_kwargs = (; legend_kwargs...,
-        xlabel="#Training Steps", ylabel="log(loss)"
-    )
-
     solved_subhams = map(sub_hamiltonians(fockspace, eigenspace, max_energies, couplings)) do subspace
         (; subspace...,
             context = make_context(fockspace, subspace.coupling, subspace.max_energy),
@@ -52,7 +49,7 @@ function learn_components!(train_states, fockspace::FockSpace, eigenspace::Eigen
     for i_epoch in 1:n_epochs
         display_index = i_wrap(solved_subhams, i_epoch)
 
-        for (i_subspace, (; coupling, states, context, components)) in enumerate(solved_subhams)
+        for (i_subspace, (; states, context, components)) in enumerate(solved_subhams)
             i_training_step = n_subspaces * (i_epoch - 1) + i_subspace
 
             losses = map(train_states) do train_state
@@ -63,12 +60,12 @@ function learn_components!(train_states, fockspace::FockSpace, eigenspace::Eigen
             loss_history[i_training_step, :] = log.(permutedims(losses))
 
             if display_index == i_subspace
-                plot(loss_history; plot_kwargs...)
+                plot(loss_history; plot_kwargs..., loss_plot_kwargs...)
             end
         end
 
         @info "Completed training epoch $i_epoch"
-    end        
+    end
 
-    (; loss_history, train_states, plot_kwargs)
+    (; loss_history, train_states)
 end

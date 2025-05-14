@@ -19,11 +19,13 @@ function sanitise(path)
 end
 
 function std_cache(fn, plot_name)
-    cache(fn, "$PLOT_CACHE/$plot_name.bson")
+    output_path = "$PLOT_CACHE/$(sanitise(plot_name)).bson"
+    
+    cache(fn, output_path)
 end
 
 function std_savefig(fig, plot_name)
-    output_path = "$PLOT_OUT/$plot_name.pdf"
+    output_path = "$PLOT_OUT/$(sanitise(plot_name)).pdf"
 
     mkpath(dirname(output_path))
     savefig(fig, output_path)

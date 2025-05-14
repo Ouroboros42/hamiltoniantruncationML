@@ -7,6 +7,7 @@ using Combinatorics, SparseArrays, ArnoldiMethod
 using Measurements
 using Lux
 using Random, Optimisers, Zygote, LogExpFunctions
+using StatsBase
 
 include("Plotting.jl")
 
@@ -28,5 +29,6 @@ include("Hamiltonian/Interaction/Phi4.jl")
 include("Learning/NetworkStructure.jl")
 include("Learning/Training.jl")
 include("Learning/Selection.jl")
+include("Learning/Evaluation.jl")
 
 end
