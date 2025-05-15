@@ -5,6 +5,7 @@ using Reexport
 @reexport using StatsPlots
 @reexport using CacheVariables
 @reexport using LaTeXStrings
+@reexport using LogExpFunctions
 
 function __init__()
     gr(show = true)

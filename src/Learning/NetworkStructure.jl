@@ -21,7 +21,7 @@ function state_eating_net(output_dims, state_layer_dims, hidden_layer_dims; cont
     processing_output_dims = isempty(hidden_layer_dims) ? processing_input_dims : hidden_layer_dims[end]
 
     @compact(
-        initial_encoding = zeros(state_encoding_dims),
+        initial_encoding = zeros(Float32, state_encoding_dims),
         state_encoding_layers = dense_layers((2 + context_dims + state_encoding_dims, state_layer_dims...), activation),
         processing_layers = dense_layers((processing_input_dims, hidden_layer_dims...), activation),
         last_layer = Dense(processing_output_dims, output_dims, out_activation)

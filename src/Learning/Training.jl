@@ -24,14 +24,13 @@ function setup_model(model)
     TrainState(model, weights, lux_state, optimiser)
 end
 
-make_context(space::FockSpace, coupling, max_energy) = [ k_unit(space); coupling; max_energy ]
+make_context(space::FockSpace, coupling, max_energy) = Float32[ k_unit(space); coupling; max_energy ]
 
 i_wrap(collection, i) = (i - 1) % length(collection) + 1
 
 function learn_components!(train_states, fockspace::FockSpace, eigenspace::EigenSpace, max_energies, couplings, n_components, n_epochs;
     plot_kwargs = (; ),
-    loss_plot_kwargs = (; ),
-    corr_plot_kwargs = (; ),
+    baseline_predictors::Vector = [],
     backend = AutoZygote(), lossfunc = MSELoss()    
 )
     solved_subhams = map(sub_hamiltonians(fockspace, eigenspace, max_energies, couplings)) do subspace
@@ -40,29 +39,31 @@ function learn_components!(train_states, fockspace::FockSpace, eigenspace::Eigen
             components = normalise_components(spectrum(subspace.hamiltonian, n_components))
         )
     end
-
-    n_subspaces = length(solved_subhams)
-    n_training_steps = n_epochs * n_subspaces
-
-    loss_history = fill(NaN, (n_training_steps, length(train_states)))
+    
+    loss_history = fill(NaN, (n_epochs, length(train_states) + length(baseline_predictors)))
 
     for i_epoch in 1:n_epochs
         display_index = i_wrap(solved_subhams, i_epoch)
 
-        for (i_subspace, (; states, context, components)) in enumerate(solved_subhams)
-            i_training_step = n_subspaces * (i_epoch - 1) + i_subspace
+        total_losses = mapreduce(.+, solved_subhams) do (; states, context, components)
+            trained_states = states[2:end] # Don't train vacuum
+            trained_components = components[2:end]
 
-            losses = map(train_states) do train_state
-                grads, loss, stats, train_state = Training.single_train_step!(backend, lossfunc, ((context, states), components), train_state)
+            baseline_losses = map(baseline_predictors) do predictor
+                lossfunc(predictor(trained_components), trained_components)
+            end
+
+            network_losses = map(train_states) do train_state
+                grads, loss, stats, train_state = Training.single_train_step!(backend, lossfunc, ((context, trained_states), trained_components), train_state)
                 loss
             end            
-            
-            loss_history[i_training_step, :] = log.(permutedims(losses))
 
-            if display_index == i_subspace
-                plot(loss_history; plot_kwargs..., loss_plot_kwargs...)
-            end
+            vcat(baseline_losses, network_losses)
         end
+                    
+        loss_history[i_epoch, :] = log.(permutedims(total_losses ./ length(solved_subhams)))
+
+        plot(loss_history; plot_kwargs...)
 
         @info "Completed training epoch $i_epoch"
     end

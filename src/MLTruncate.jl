@@ -6,7 +6,7 @@ using MLStyle, DataStructures
 using Combinatorics, SparseArrays, ArnoldiMethod
 using Measurements
 using Lux
-using Random, Optimisers, Zygote, LogExpFunctions
+using Random, Optimisers, Zygote
 using StatsBase
 
 include("Plotting.jl")
