@@ -17,35 +17,51 @@ function setup_model(model)
     Random.seed!(rng, 0)
     device = cpu_device()
 
-    optimiser = Adam(0.001f0)
+    optimiser = Adam(0.01f0)
 
     weights, lux_state = Lux.setup(rng, model) |> device
     
     TrainState(model, weights, lux_state, optimiser)
 end
 
-make_context(space::FockSpace, coupling, max_energy) = Float32[ k_unit(space); coupling; max_energy ]
+function make_context(space::FockSpace, coupling, max_energy; coupling_in_context::Bool = true, cutoff_in_context::Bool = true)
+    context = Float32[ k_unit(space) ]
 
-i_wrap(collection, i) = (i - 1) % length(collection) + 1
+    if coupling_in_context
+        context = Float32[ context; coupling ]
+    end
+
+    if cutoff_in_context
+        context = Float32[ context; max_energy ]
+    end
+
+    context
+end
 
 function learn_components!(train_states, fockspace::FockSpace, eigenspace::EigenSpace, max_energies, couplings, n_components, n_epochs;
     plot_kwargs = (; ),
     baseline_predictors::Vector = [],
-    backend = AutoZygote(), lossfunc = MSELoss()    
+    backend = AutoZygote(), lossfunc = MSELoss(),
+    coupling_in_context::Bool=true,
+    cutoff_in_context::Bool=true
 )
-    solved_subhams = map(sub_hamiltonians(fockspace, eigenspace, max_energies, couplings)) do subspace
-        (; subspace...,
-            context = make_context(fockspace, subspace.coupling, subspace.max_energy),
+    subhams = sub_hamiltonians(fockspace, eigenspace, max_energies, couplings)
+
+    solutions = map(subhams) do subspace
+        (;
+            context = make_context(fockspace, subspace.coupling, subspace.max_energy; coupling_in_context, cutoff_in_context),
             components = normalise_components(spectrum(subspace.hamiltonian, n_components))
         )
     end
-    
+
     loss_history = fill(NaN, (n_epochs, length(train_states) + length(baseline_predictors)))
+    
+    subspace_indices = collect(enumerate(eachindex(subhams)))
 
     for i_epoch in 1:n_epochs
-        display_index = i_wrap(solved_subhams, i_epoch)
+        subspace_indices = shuffle!(subspace_indices)
 
-        total_losses = mapreduce(.+, solved_subhams) do (; states, context, components)
+        total_losses = mapreduce(.+, merge(subhams[bi], solutions[i]) for (i, bi) in subspace_indices) do (; states, context, components)
             trained_states = states[2:end] # Don't train vacuum
             trained_components = components[2:end]
 
@@ -61,7 +77,7 @@ function learn_components!(train_states, fockspace::FockSpace, eigenspace::Eigen
             vcat(baseline_losses, network_losses)
         end
                     
-        loss_history[i_epoch, :] = log.(permutedims(total_losses ./ length(solved_subhams)))
+        loss_history[i_epoch, :] = log.(permutedims(total_losses ./ length(total_losses)))
 
         plot(loss_history; plot_kwargs...)
 

@@ -32,11 +32,11 @@ function compare_training!(space, eigenspace, max_energy, coupling, n_epochs, mo
 
     (; train_states, loss_history) = std_cache(plot_name) do
         train_states = map(model_dims) do internal_dims
-            setup_model(state_eating_net(output_dims, internal_dims...))
+            setup_model(state_eating_net(output_dims, internal_dims...; context_dims=2))
         end
 
         learn_components!(train_states, space, eigenspace, max_energy, coupling, output_dims, n_epochs;
-            plot_kwargs, baseline_predictors = [uniform_baseline]
+            plot_kwargs, baseline_predictors = [uniform_baseline], cutoff_in_context = false
         )
     end
 
@@ -51,6 +51,6 @@ model_dims = [
 
 max_energy = 15
 coupling = 1:0.5:5
-n_epochs = 500
+n_epochs = 600
 
 compare_training!(FockSpace{Float32}(8), EigenSpace{Int8, UInt8}(n_parity=Odd), max_energy, coupling, n_epochs, model_dims)
