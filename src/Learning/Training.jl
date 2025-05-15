@@ -12,12 +12,12 @@ end
 normalise_components(components) = abs.(components)
 normalise_components((components, _)::Tuple) = normalise_components(components)
 
-function setup_model(model)
+function setup_model(model, adam_params... = 0.01f0)
     rng = Random.default_rng()
     Random.seed!(rng, 0)
     device = cpu_device()
 
-    optimiser = Adam(0.01f0)
+    optimiser = Adam(adam_params...)
 
     weights, lux_state = Lux.setup(rng, model) |> device
     
@@ -84,5 +84,5 @@ function learn_components!(train_states, fockspace::FockSpace, eigenspace::Eigen
         @info "Completed training epoch $i_epoch"
     end
 
-    (; loss_history, train_states)
+    (; loss_history, train_states, subspaces = subhams)
 end
