@@ -17,7 +17,7 @@ function evaluate_mphys(free_space, max_energy, couplings, K = Int8, N = UInt8)
     
     mphys = E1 .- E0
 
-    plt = plot(couplings, mphys, xlabel = L"g", ylabel = L"m_{\mathrm{phys}}", legend=false)
+    plt = plot(couplings, mphys, xlabel = L"g", ylabel = L"m_{\mathrm{phys}}", legend=false, title=L"Critical Point in Physical Mass of $\phi^4$ Theory")
     savefig(plt, "$PLOT_OUT/$plot_name.pdf")
 end
 
