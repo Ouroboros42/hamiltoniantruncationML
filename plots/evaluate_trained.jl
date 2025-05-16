@@ -2,10 +2,10 @@ using MLTruncate
 
 function evaluate_trained(model, space, eigenspace, low_max_energy, couplings, n_epochs, high_max_energy, n_extra_states)
     plot_kwargs = (;
+        title = "Loss During Model Training\nN-$(eigenspace.n_parity) Subspace",
         xlabel="#Training Epochs", ylabel=L"\log\left(\overline{\mathrm{Err}^2}\right)",
         legend=:topright, 
-        label=[ "Uniform baseline" "Trained Network" ],
-        linealpha=0.6
+        label=[ "Uniform baseline" "Neural Network" ]
     )
 
     context_kwargs = (; cutoff_in_context = false)
@@ -22,11 +22,10 @@ function evaluate_trained(model, space, eigenspace, low_max_energy, couplings, n
 
     std_savefig(plot(loss_history; plot_kwargs...), file_name("training"))
 
-    (; baseline_E0s, trained_E0s) = std_cache(file_name("applied")) do
-        shared_states = first(subspaces).states
+    shared_states = first(subspaces).states
 
+    (; baseline_E0s, trained_E0s) = std_cache(file_name("applied")) do
         more_states = collect(Iterators.filter(!in(shared_states), generate_states(space, eigenspace, high_max_energy)))
-        max_extra_states = n_extra_states[end]
         baseline_scorer = -free_energy(space)
 
         baseline_subspaces = scored_subspaces(baseline_scorer, more_states, n_extra_states, shared_states)
@@ -49,7 +48,21 @@ function evaluate_trained(model, space, eigenspace, low_max_energy, couplings, n
         (; baseline_E0s, trained_E0s)
     end
 
-    plot(n_extra_states, [baseline_E0s[:, 3] trained_E0s[:, 3]]; label = [ "Free Energy" "Trained Model" ], legendtitle = "Ordering")
+    # mean_baseline = mean_measure(baseline_E0s, dims=2)
+    # mean_trained = mean_measure(trained_E0s, dims=2)
+
+    E0_diff = @. 100 * (trained_E0s - baseline_E0s) / abs(baseline_E0s)
+
+    plt = plot(n_extra_states .+ length(shared_states), E0_diff;
+        # legendtitle = "Fock-State Selection",
+        # label = [ "Free Energy" "Trained Model" ],
+        label = permutedims(map(c -> "g = $c", couplings)),
+        xlabel = "# States Diagonalised",
+        ylabel = "% Change in Ground State Energy",
+        title = "Effect of Trained Model on Ground-State Energy\nN-$(eigenspace.n_parity) Subspace"
+    )
+
+    std_savefig(plt, file_name("applied"))
 end
 
 model = state_eating_net(1, (20,), (30,), context_dims=2)

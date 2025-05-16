@@ -4,7 +4,7 @@ using Base.Iterators
 using Logging
 using MLStyle, DataStructures
 using Combinatorics, SparseArrays, ArnoldiMethod
-using Measurements
+using Measurements, Statistics
 using Lux
 using Random, Optimisers, Zygote
 using StatsBase

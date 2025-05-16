@@ -3,7 +3,9 @@ export StatsAccumulator, mean, total, count, variance, stdev, samplevar, samples
 import Base: push!
 
 using Measurements
+using Statistics
 import Measurements: measurement
+import Statistics: mean
 
 mutable struct StatsAccumulator{T}
     count::UInt
@@ -20,9 +22,6 @@ function push!(acc::StatsAccumulator{T}, data::T) where T
     acc.sumsquares += data ^ 2
 end
 
-
-mean(seq) = sum(seq) / length(seq)
-
 total(acc::StatsAccumulator) = acc.total
 count(acc::StatsAccumulator) = acc.count
 mean(acc::StatsAccumulator) = total(acc) / count(acc)
@@ -34,3 +33,5 @@ samplestdev(acc) = sqrt(samplevar(acc))
 
 mean_measure(acc::StatsAccumulator) = mean(acc) ± samplestdev(acc)
 total_measure(acc::StatsAccumulator) = total(acc) ± (samplestdev(acc) * count(acc))
+
+mean_measure(data; kwargs...) = mean(data; kwargs...) .± std(data; kwargs...)
