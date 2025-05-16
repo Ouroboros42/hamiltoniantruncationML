@@ -1,4 +1,4 @@
-export spectrum, groundstate
+export spectrum, groundstate, groundenergy
 
 function spectrum(hamiltonian, n_eigs::Integer)
     decomp, history = partialschur(hamiltonian; nev=n_eigs, which=:SR)
@@ -18,3 +18,5 @@ function groundstate(hamiltonian)
     
     eigvecs[:, begin], eigvals[begin]
 end
+
+groundenergy(hamiltonian) = groundstate(hamiltonian)[2]

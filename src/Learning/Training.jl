@@ -1,4 +1,4 @@
-export learn_components!, apply, setup_model, make_context, state_scorer, sort_by_score, normalise_components
+export learn_components!, apply, setup_model, restart_model, make_context, state_scorer, sort_by_score, normalise_components
 
 import Lux.apply, Lux.Training.TrainState
 
@@ -23,6 +23,8 @@ function setup_model(model, adam_params... = 0.01f0)
     
     TrainState(model, weights, lux_state, optimiser)
 end
+
+restart_model(model, params) = TrainState(model, params..., Adam(0.01f0))
 
 function make_context(space::FockSpace, coupling, max_energy; coupling_in_context::Bool = true, cutoff_in_context::Bool = true)
     context = Float32[ k_unit(space) ]
@@ -84,5 +86,9 @@ function learn_components!(train_states, fockspace::FockSpace, eigenspace::Eigen
         @info "Completed training epoch $i_epoch"
     end
 
-    (; loss_history, train_states, subspaces = subhams)
+    parameters = map(train_states) do train_state
+        train_state.parameters, train_state.states
+    end
+
+    (; loss_history,  parameters, subspaces = subhams)
 end

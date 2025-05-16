@@ -1,4 +1,4 @@
-export sub_spaces, sub_hamiltonians, hamiltonian
+export sub_spaces, sub_hamiltonians, hamiltonian, any_sub_hamiltonians
 
 function sub_spaces(space::FockSpace, eigenspace::EigenSpace, energies)
     map(energies) do energy
@@ -38,13 +38,7 @@ function assemble_subspacehamiltonian(states, H0, V, coupling, max_energy)
     (; states, coupling, max_energy, hamiltonian = (@. H0 + coupling * V))
 end
 
-function sub_hamiltonians(space, eigenspace, energies, couplings; is_sparse::Bool=true, ordering_score = nothing)
-    """Generate hamiltonians for Phi4 theories with the given couplings, cutoff at the given max energies. Broadcasts over energies, couplings."""
-
-    @info "Generating states"
-
-    substates = sub_spaces(space, eigenspace, energies)
-
+function any_sub_hamiltonians(space, substates, energies, couplings; is_sparse::Bool=true, ordering_score = nothing)
     if substates isa AbstractArray{<:FieldState}
         substates = Ref(substates)
     end
@@ -59,4 +53,14 @@ function sub_hamiltonians(space, eigenspace, energies, couplings; is_sparse::Boo
     V = sub_matrices(Phi4Interaction(space), substates, is_sparse)
 
     Broadcast.broadcasted(assemble_subspacehamiltonian, substates, H0, V, couplings, energies)
+end
+
+function sub_hamiltonians(space, eigenspace, energies, couplings; kwargs...)
+    """Generate hamiltonians for Phi4 theories with the given couplings, cutoff at the given max energies. Broadcasts over energies, couplings."""
+
+    @info "Generating states"
+
+    substates = sub_spaces(space, eigenspace, energies)
+
+    any_sub_hamiltonians(space, substates, energies, couplings; kwargs...)
 end
