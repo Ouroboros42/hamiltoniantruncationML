@@ -10,14 +10,25 @@ function plot_components(space, subspace, max_energies, couplings)
             normalise_components(groundstate(hamiltonian))[2:end]
         end...)
     end
-    
-    label = hcat(map(couplings) do coupling
-        latexstring("g = $coupling")
-    end...)
 
-    plt = groupedbar(components; xlabel = "States ordered by free energy", ylabel = "Magnitude of component", label)
+    title = "Components of Ground State\nN-$(subspace.n_parity) Subspace"
+
+    coupling_labels = map(couplings) do coupling
+        latexstring("g = $coupling")
+    end
+
+    if !(coupling_labels isa AbstractArray) || iszero(ndims(coupling_labels))
+        label = :none
+        title = "$title, g = $couplings"
+    else
+        label = stack(coupling_labels, dims = 2)
+    end
+
+    plt = groupedbar(components;
+        xlabel = "States ordered by free energy", ylabel = "Magnitude of component", label, title
+    )
 
     std_savefig(plt, plot_name)
 end
 
-plot_components(FockSpace{Float32}(8), EigenSpace{Int8, UInt8}(0, Even, Even), 20, 2)
+plot_components(FockSpace{Float32}(8), EigenSpace{Int8, UInt8}(0, Even, Even), 23, 2)
