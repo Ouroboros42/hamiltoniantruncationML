@@ -2,14 +2,24 @@ export generate_states
 
 import Base: isvalid
 
-function generate_states(fockspace::FockSpace, eigenspace::EigenSpace, max_energy)
+function generate_states(fockspace::FockSpace, eigenspace::EigenSpace{K, N}, max_energy) where {K, N}
     (net_pos_k, net_neg_k) = sign_split(eigenspace.momentum)
-    max_k_int = max_momentum(fockspace, max_energy) - abs(eigenspace.momentum)
 
-    states = flatmap(0:max_k_int+1) do k_internal
-        gross_momentum_states(fockspace, eigenspace, max_energy, k_internal + net_pos_k, k_internal + net_neg_k)
-    end
+    if max_energy <= 1
+        if eigenspace.n_parity == Odd || max_energy < 0
+            return ()
+        end
+
+        states = (DictFockState{K, N}(),)
+    else
     
+        max_k_int = max_momentum(fockspace, max_energy) - abs(eigenspace.momentum)
+
+        states = flatmap(0:max_k_int+1) do k_internal
+            gross_momentum_states(fockspace, eigenspace, max_energy, k_internal + net_pos_k, k_internal + net_neg_k)
+        end
+    end
+
     # Zeros have already been filtered
     symmetrise_states(states, eigenspace.x_symmetrisation, false)
 end
