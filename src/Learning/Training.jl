@@ -1,4 +1,4 @@
-export learn_components!, apply, setup_model, restart_model, make_context, state_scorer, sort_by_score, normalise_components
+export learn_components!, apply, setup_model, restart_model, make_context, state_scorer, sort_by_score, normalise_components, uniform_baseline
 
 import Lux.apply, Lux.Training.TrainState
 
@@ -11,6 +11,8 @@ end
 
 normalise_components(components) = abs.(components)
 normalise_components((components, _)::Tuple) = normalise_components(components)
+
+uniform_baseline(true_components) = fill(sum(true_components) / length(true_components), length(true_components))
 
 function setup_model(model, adam_params... = 0.01f0)
     rng = Random.default_rng()
@@ -90,5 +92,5 @@ function learn_components!(train_states, fockspace::FockSpace, eigenspace::Eigen
         train_state.parameters, train_state.states
     end
 
-    (; loss_history,  parameters, subspaces = subhams)
+    (; loss_history,  parameters, subspaces = subhams, solutions)
 end

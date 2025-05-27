@@ -9,11 +9,13 @@ function plot_scaling(space, subspace, max_energies)
 
     title = latexstring("Dimension Scaling of Truncated Fock Space\n\$mL=$(size(space))\$")
 
-    plt = plot(max_energies, log.(sizes);
-        xlabel = L"E_{\mathrm{max}}/m", ylabel = L"\log\left(N\right)", title, legend=false
+    plt = plot(max_energies, sizes;
+        xlabel = L"\tilde E_{\mathrm{max}}", ylabel = "Number of States (log-scale)", legend=false,
+        yaxis = :log, yticks = (10 .^ (0:5)),
+        guidefont = font("Computer Modern", 12)
     )
 
     std_savefig(plt, plot_name)
 end
 
-plot_scaling(FockSpace{Float32}(8), EigenSpace{Int8, UInt8}(x_symmetrisation=Even), 1:23)
+plot_scaling(FockSpace{Float32}(8), EigenSpace{Int8, UInt8}(x_symmetrisation=Even), 0.1:2:32.1)
