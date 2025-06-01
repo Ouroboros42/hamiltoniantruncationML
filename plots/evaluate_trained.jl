@@ -1,7 +1,7 @@
 using MLTruncate
 
-function evaluate_trained(training_file_name, crit_file_name, model, space, eigenspace, low_max_energy, couplings, n_epochs, high_max_energy, n_extra_states, alpha)
-    ptitle = "$(eigenspace.n_parity) Subspace"
+function evaluate_trained(training_file_name, crit_file_name, model, space, eigenspace, low_max_energy, couplings, n_epochs, high_max_energy, n_extra_states, alpha, use_title::Bool)
+    ptitle = use_title ? "$(eigenspace.n_parity) Subspace" : ""
 
     plot_kwargs = (;
         xlabel="Training Epochs", ylabel=L"\log\left(\mathrm{MSE}\right)",
@@ -46,6 +46,7 @@ function evaluate_trained(training_file_name, crit_file_name, model, space, eige
             markerstrokewidth = 0,
             markercolor = :black,
             title = ptitle,
+            legend = :topleft
         )
 
         freeze_xlims!(comp_plt)
@@ -56,7 +57,7 @@ function evaluate_trained(training_file_name, crit_file_name, model, space, eige
 
         freeze_ylims!(comp_plt)
 
-        plot!(comp_plt, coord_range, coord_range; linewidth = 2, label = "Objective")
+        plot!(comp_plt, coord_range, coord_range; linewidth = 2, label = "Objective", linealpha = 0.8)
 
         std_savefig(comp_plt, training_file_name("sample-all"))
     end
@@ -125,7 +126,7 @@ crit_file_name(n_parity) =  section -> "evaluate_trained/$section/N-$(n_parity)_
 (bE0, tE0), (bE1, tE1) = map((Even, Odd)) do n_parity
     eigenspace = FastEigenSpace(; n_parity)
 
-    evaluate_trained(training_file_name(n_parity), crit_file_name(n_parity), model, space, eigenspace, low_max_energy, couplings, n_epochs, high_max_energy, n_extra_states, alpha)
+    evaluate_trained(training_file_name(n_parity), crit_file_name(n_parity), model, space, eigenspace, low_max_energy, couplings, n_epochs, high_max_energy, n_extra_states, alpha, false)
 end
 
 bmphys = bE1 .- bE0
