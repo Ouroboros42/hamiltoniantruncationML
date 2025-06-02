@@ -1,4 +1,5 @@
 using MLTruncate
+using Statistics
 
 function evaluate_trained(training_file_name, crit_file_name, model, space, eigenspace, low_max_energy, couplings, n_epochs, high_max_energy, n_extra_states, alpha, use_title::Bool)
     ptitle = use_title ? "$(eigenspace.n_parity) Subspace" : ""
@@ -64,7 +65,7 @@ function evaluate_trained(training_file_name, crit_file_name, model, space, eige
 
     shared_states = first(subspaces).states
 
-    (; baseline_E0s, trained_E0s) = std_cache(crit_file_name("applied")) do
+    (; baseline_E0s, trained_grounds) = std_cache(crit_file_name("applied")) do
         more_states = collect(Iterators.filter(!in(shared_states), generate_states(space, eigenspace, high_max_energy)))
         baseline_scorer = -free_energy(space)
 
@@ -75,25 +76,63 @@ function evaluate_trained(training_file_name, crit_file_name, model, space, eige
             groundenergy(hamiltonian)
         end
 
-        trained_E0s = mapreduce(hcat, subspaces) do (; coupling, max_energy)
+        trained_grounds = mapreduce(hcat, subspaces) do (; coupling, max_energy)
             context = make_context(space, coupling, max_energy; context_kwargs...)
 
             trained_scorer = state_scorer(trained_model, context)
             trained_subspaces = scored_subspaces(trained_scorer, more_states, n_extra_states, shared_states)
-            map(any_sub_hamiltonians(space, trained_subspaces, nothing, coupling)) do (; hamiltonian)
-                groundenergy(hamiltonian)[1]
+            map(any_sub_hamiltonians(space, trained_subspaces, nothing, coupling)) do (; hamiltonian, states)
+                (trained_scorer(states), groundstate(hamiltonian)...)
             end
         end
 
-        (; baseline_E0s, trained_E0s)
+        (; baseline_E0s, trained_grounds)
     end
 
-    # mean_baseline = mean_measure(baseline_E0s, dims=2)
-    # mean_trained = mean_measure(trained_E0s, dims=2)
+    n_states = n_extra_states .+ length(shared_states)
+
+    begin
+        correlation = map(trained_grounds) do (scores, components, _)
+            scores = dropdims(scores; dims=(2, 3))
+            cor(scores, abs.(components))
+        end
+
+        corrplt = plot(n_states, correlation;
+            legendtitle = L"\tilde g",
+            label = permutedims(couplings),
+            palette = :managua10,
+            ylim = [0, 1],
+            xlabel = "Truncated Subspace Dimension",
+            ylabel = "Pearson Correlation Coefficient",
+        )
+
+        std_savefig(corrplt, crit_file_name("correlation"))
+        
+        scores = map(g -> dropdims(g[1], dims=(2, 3)), trained_grounds)
+        trained_components = map(g -> g[2], trained_grounds)
+
+        ig = 1
+        iN = 1
+
+        select_comps(m) = m[iN, ig]
+
+        selected_scores = select_comps(scores)
+        selected_components = abs.(select_comps(trained_components))
+
+        compplt = scatter(selected_scores, selected_components;
+            xaxis = :log, yaxis = :log,
+            title = ptitle,
+
+        )
+
+        std_savefig(compplt, crit_file_name("components"))
+    end
+
+    trained_E0s = map(g -> g[3], trained_grounds)
 
     E0_diff = @. (trained_E0s - baseline_E0s)
 
-    plt = plot(n_extra_states .+ length(shared_states), E0_diff;
+    plt = plot(n_states, E0_diff;
         title = ptitle,
         legendtitle = L"\tilde g",
         label = permutedims(couplings),
